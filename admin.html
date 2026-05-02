@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản trị - Toán Luyện Đề</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin-style.css">
+  <link rel="website icon" type="jpg" href="logo.jpg">
+</head>
+<body>
+  <header>
+    <div class="header-content">
+        <div class="logo" onclick="window.location.href='index.html'">
+            <img src="logo.jpg" alt="Logo" class="logo-img">
+            <span>Toán Luyện Đề</span>
+        </div>
+      <nav class="nav-buttons">
+        <a href="index.html" class="nav-btn">Trang chủ</a>
+        <a href="admin.html" class="nav-btn admin-btn">Quản trị</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <h1 style="text-align: center; margin: 40px 0 20px; color: #e6260d;">📊 Quản Trị Đề Thi</h1>
+
+    <!-- Form thêm / sửa đề -->
+    <div class="admin-form">
+      <h2 id="form-title">Thêm đề thi mới</h2>
+      
+      <input type="hidden" id="edit-index" value="-1">
+
+      <label>Chuyên đề:</label>
+      <select id="chuyen-de"></select>
+
+      <label>Tên đề thi:</label>
+      <input type="text" id="ten-de" placeholder="Ví dụ: Đề 01 - Xác suất cơ bản">
+
+      <label>Link đề thi:</label>
+      <input type="text" id="link-de" placeholder="Ví dụ: Ma_de_01.html hoặc https://...">
+
+      <div class="form-row">
+        <div>
+          <label>Số câu hỏi:</label>
+          <input type="number" id="so-cau" value="25" min="1">
+        </div>
+        <div>
+          <label>Thời gian (phút):</label>
+          <input type="number" id="thoi-gian" value="45" min="1">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top: 25px;">
+        <button onclick="themDeMoi()" id="btn-save" style="flex:1;">✅ Thêm đề mới</button>
+        <button onclick="cancelEdit()" id="btn-cancel" style="flex:1; background:#64748b; display:none;">Hủy sửa</button>
+      </div>
+    </div>
+
+    <!-- Danh sách đề -->
+    <h2>📋 Danh sách đề thi đã đăng (<span id="de-count">0</span>)</h2>
+    <div id="admin-list" class="admin-list"></div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="admin-script.js"></script>
+</body>
+</html>

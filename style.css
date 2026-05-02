@@ -1,0 +1,371 @@
+/* ==================== DARK MODE - TOÀN BỘ WEBSITE ==================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+  min-height: 100vh;
+}
+
+/* Header */
+header {
+  background: #1e2937;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  font-size: 26px;
+  font-weight: 700;
+  color: #60a5fa;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
+.logo-icon {
+  font-size: 32px;
+  margin-right: 12px;
+}
+
+/* Navigation */
+.nav-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.nav-btn {
+  padding: 10px 22px;
+  background: #334155;
+  color: #cbd5e1;
+  text-decoration: none;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.nav-btn:hover {
+  background: #475569;
+  color: #93c5fd;
+  transform: translateY(-2px);
+}
+
+.admin-btn {
+  background: #b91c1c;
+  color: white;
+}
+
+.admin-btn:hover {
+  background: #991b1b;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 32px;
+  margin-bottom: 40px;
+  color: #bfdbfe;
+  font-weight: 700;
+}
+
+/* Cards chung */
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+/* ==================== CARD CHUYÊN ĐỀ (Dark) ==================== */
+.chuyende-card {
+  background: #1e2937;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+  transition: all 0.4s ease;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #334155;
+}
+
+.chuyende-card:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 25px 55px rgba(0, 0, 0, 0.5);
+  border-color: #60a5fa;
+}
+
+.chuyende-card .image-container {
+  padding: 20px 20px 10px 20px;
+  background: #0f172a;
+  position: relative;
+}
+
+.chuyende-card img {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid #475569;
+  transition: transform 0.5s ease;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.chuyende-card:hover img {
+  transform: scale(1.04);
+}
+
+.chuyende-card .overlay {
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 60px;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.9), transparent);
+  border-radius: 0 0 16px 16px;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.chuyende-card:hover .overlay {
+  opacity: 1;
+}
+
+.chuyende-card .vip-badge {
+  position: absolute;
+  top: 32px;
+  right: 32px;
+  background: linear-gradient(135deg, #fffb00, #fea101);
+  color: #1e2937;
+  padding: 6px 18px;
+  border-radius: 30px;
+  font-size: 13.5px;
+  font-weight: 700;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.chuyende-card .name {
+  padding: 22px 20px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #bfdbfe;
+  text-align: center;
+  background: #1e2937;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid #334155;
+}
+
+/* ==================== CARD ĐỀ THI (Dark) ==================== */
+.card {
+  background: #1e2937;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s;
+  border: 1px solid #334155;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.card-image {
+  position: relative;
+  height: 200px;
+  background: #0f172a;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vip-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: linear-gradient(135deg, #fffb00, #fea101);
+  color: #1e2937;
+  padding: 6px 18px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.title {
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #e0f2fe;
+}
+
+.info {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 18px;
+  color: #94a3b8;
+  font-size: 15px;
+}
+
+.button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.button:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-2px);
+}
+
+/* Admin Form */
+.admin-form {
+  background: #1e2937;
+  padding: 35px 40px;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  max-width: 720px;
+  margin: 30px auto;
+  border: 1px solid #334155;
+}
+
+.admin-form h2 {
+  color: #60a5fa;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.admin-form label {
+  display: block;
+  margin: 20px 0 8px;
+  font-weight: 600;
+  color: #bae6fd;
+}
+
+.admin-form select,
+.admin-form input {
+  width: 100%;
+  padding: 14px 16px;
+  background: #334155;
+  border: 2px solid #475569;
+  border-radius: 12px;
+  color: #e2e8f0;
+  font-size: 16px;
+}
+
+.admin-form select:focus,
+.admin-form input:focus {
+  border-color: #60a5fa;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2);
+}
+/* ==================== LOGO - ĐÃ CHỈNH NHỎ LẠI ==================== */
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.3s;
+  user-select: none;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
+.logo-img {
+  width: 42px;         
+  height: 42px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.logo span {
+  font-size: 24px;      
+  font-weight: 700;
+  color: #60a5fa;
+}
+
+/* Responsive cho Mobile */
+@media (max-width: 600px) {
+  .container {
+    padding: 0 15px;
+    margin: 20px auto;
+  }
+
+  .page-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .cards-container {
+    grid-template-columns: 1fr; /* Mỗi hàng 1 card */
+    gap: 15px;
+  }
+
+  .header-content {
+    padding: 12px 15px;
+  }
+
+  .logo span {
+    font-size: 18px; /* Thu nhỏ logo trên mobile */
+  }
+
+  .logo-img {
+    width: 35px;
+    height: 35px;
+  }
+
+  .nav-btn {
+    padding: 8px 15px;
+    font-size: 13px;
+  }
+}

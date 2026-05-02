@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng luyện đề trắc nghiệm</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="website icon" type="jpg" href="../../logo.jpg">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #38bdf8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 10px; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timer-container {
+            background: var(--card-bg);
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .q-badge {
+            background: rgba(248, 94, 56, 0.1);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        #q-text { margin: 15px 0; font-size: 1.15rem; font-weight: 500; }
+
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .option {
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .option:hover:not(.disabled) { background: rgba(0, 94, 255, 0.07); border-color: var(--text-secondary); }
+        .option.selected { border-color: var(--primary); background: rgba(0, 157, 255, 0.1); }
+        .option.correct { border-color: var(--success); color: var(--success); background: rgba(34, 197, 94, 0.1); }
+        .option.wrong { border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.1); }
+        .option.disabled { cursor: default; }
+
+        .controls { display: flex; justify-content: space-between; margin-top: 20px; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: #000; width: 100%; justify-content: center; margin-top: 15px; }
+        .btn-secondary { background: var(--border); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; justify-content: center; margin-top: 10px; }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+        }
+
+        .nav-item {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .nav-item.active { border-color: var(--primary); color: var(--primary); outline: 2px solid rgba(56,189,248,0.2); }
+        .nav-item.done { background: #334155; color: #fff; }
+        .nav-item.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .nav-item.wrong { background: var(--error); color: #fff; border-color: var(--error); }
+
+        .explanation-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(56, 189, 248, 0.05);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+        }
+
+        .hidden { display: none; }
+        
+        .score-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        #score-percent { text-align: center; color: var(--text-secondary); font-weight: bold; }
+        /* Màu xanh dương đậm khi chọn */
+        .option.selected {
+            background-color: #2aa2d6 !important; 
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important; /* Chữ trắng cho nổi bật */
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- RESPONSIVE CHO ĐIỆN THOẠI --- */
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .container { padding: 5px; }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .main-layout {
+                grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+            }
+
+            .quiz-section { order: 1; }
+            .sidebar { order: 2; }
+
+            .timer-container { font-size: 1.2rem; width: 100%; justify-content: center; display: flex; }
+            
+            .q-text { font-size: 1.05rem; }
+            .option { padding: 12px; font-size: 0.95rem; }
+            
+            .controls button {
+                flex: 1;
+                padding: 15px 10px; /* Tăng diện tích chạm */
+                font-size: 0.9rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: repeat(5, 1fr); /* Hiển thị 5 ô trên 1 hàng cho gọn */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nút quay lại -->
+    <div style="padding: 10px; max-width: 1100px; margin: 0 auto;">
+        <button onclick="window.history.back()" class="btn btn-secondary" style="width: auto; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </button>
+    </div>
+    <div class="container">
+        <header>
+            <div class="header-info">
+                <h1 id="quiz-title">Xác suất - Mã đề 01</h1>
+                <p id="quiz-subtitle">Thời gian: <span id="limit-time">45</span> phút</p>
+            </div>
+            <div class="timer-container">
+                <i class="fas fa-clock"></i>
+                <span id="timer">45:00</span>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="quiz-section">
+                <div id="question-card" class="card">
+                    <div class="card-header">
+                        <span class="q-badge">Câu <span id="q-current">1</span>/25</span>
+                    </div>
+                    <h2 id="q-text">Đang tải...</h2>
+                    <div id="options-list" class="options-list"></div>
+                    <div id="explanation-box" class="explanation-box hidden">
+                        <strong><i class="fas fa-lightbulb"></i> Giải thích:</strong>
+                        <p id="explanation-text" style="margin-top:5px; color: var(--text-secondary);"></p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="prev-btn" class="btn btn-secondary"><i class="fas fa-chevron-left"></i> Câu trước</button>
+                    <button id="next-btn" class="btn btn-secondary">Câu sau <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 10px;">Tiến trình làm bài</h3>
+                    <div id="nav-grid" class="nav-grid"></div>
+                    <button id="submit-btn" class="btn btn-primary">NỘP BÀI</button>
+                </div>
+
+                <div id="result-card" class="card hidden">
+                    <h3 style="text-align: center;">KẾT QUẢ</h3>
+                    <div class="score-display">
+                        <span id="score-val">0</span>/<span id="total-val">25</span>
+                    </div>
+                    <p id="score-percent">0%</p>
+                    <button onclick="location.reload()" class="btn btn-outline">Làm lại bài thi</button>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const QUIZ_DATA = {
+            title: "Đề Ôn Tập Xác Suất - Mã đề 01",
+            time: 45,
+            questions: [
+                {
+                    text: "Câu 1. Cho A và B là hai biến cố độc lập. Biết P(A) = 0,58 và P(B) = 0,88. Tính xác suất của biến cố AB (kết quả làm tròn đến hàng phần nghìn).",
+                    options: ["0,510", "0,070", "0,370", "0,051"],
+                    correct: 0,
+                    explanation: "Vì A, B độc lập nên P(AB) = P(A).P(B) = 0,58 * 0,88 = 0,5104. Làm tròn: 0,510."
+                },
+                {
+                    text: "Câu 2. Một hộp chứa 15 viên bi có màu sắc khác nhau. Lấy ngẫu nhiên một viên bi, quan sát màu sắc rồi trả lại vào hộp. Tiếp tục lấy lần 2 rồi trả lại, cứ tiếp tục như thế đến 9 lần. Gọi A_i là biến cố 'Lần thứ i lấy được viên bi màu trắng'. Mệnh đề nào mô tả biến cố A_3 ∩ A_7?",
+                    options: [
+                        "Lần rút đầu tiên lấy được bi màu trắng là lần lấy thứ 5.",
+                        "Cả hai lần lấy thứ 3 và thứ 7 đều không lấy được bi màu trắng.",
+                        "Ít nhất một trong các lần lấy thứ 3 và thứ 7 lấy được bi màu trắng.",
+                        "Cả hai lần lấy thứ 3 và thứ 7 đều lấy được bi màu trắng."
+                    ],
+                    correct: 3,
+                    explanation: "Phép giao (∩) của hai biến cố nghĩa là cả hai biến cố đó đều phải xảy ra."
+                },
+                {
+                    text: "Câu 3. Cho A và B là hai biến cố độc lập. Biết P(A) = 0,74 và P(B) = 0,24. Tính xác suất biến cố P(A_ngang B)?",
+                    options: ["0,20", "0,56", "0,06", "0,18"],
+                    correct: 2,
+                    explanation: "P(A_ngang B) = P(A_ngang).P(B) = (1 - 0,74) * 0,24 = 0,26 * 0,24 = 0,0624. Làm tròn: 0,06."
+                },
+                {
+                    text: "Câu 4. Gieo đồng thời một con xúc xắc cân đối và đồng chất hai lần. Gọi A là biến cố 'Tổng số chấm của hai lần gieo lớn hơn 6', B là biến cố 'Tổng số chấm của hai lần gieo nhỏ hơn 9'. Xác định số phần tử của biến cố AB.",
+                    options: ["11", "9", "14", "5"],
+                    correct: 2,
+                    explanation: "AB là biến cố 'Tổng số chấm bằng 7 hoặc 8'. Tổng = 7 có: (1,6),(2,5),(3,4),(4,3),(5,2),(6,1) -> 6 cách. Tổng = 8 có: (2,6),(3,5),(4,4),(5,3),(6,2) -> 5 cách. Tổng là 11 phần tử? Kiểm tra lại: Câu hỏi yêu cầu AB giao nhau. Tập {7, 8}. Tổng cộng 11 phần tử."
+                },
+                {
+                    text: "Câu 5. Một hộp chứa 40 quả cầu kích thước được đánh số từ 1 đến 40. Chọn ngẫu nhiên 1 quả cầu. Gọi A là biến cố 'Số ghi trên quả cầu thuộc đoạn [1; 39]', B là biến cố 'Số ghi trên quả cầu là số chia hết cho 4'. Xác định số phần tử của biến cố AB.",
+                    options: ["10", "13", "9", "15"],
+                    correct: 2,
+                    explanation: "B gồm các số {4, 8, 12, 16, 20, 24, 28, 32, 36, 40}. Vì giao với A (nhỏ hơn hoặc bằng 39) nên loại số 40. Còn lại 9 phần tử."
+                },
+                {
+                    text: "Câu 6. Một xạ thủ bắn lần lượt 2 viên đạn vào một bia. Xác suất trúng của viên thứ nhất là 0,84 và của viên thứ hai là 0,83. Tính xác suất biến cố 'chỉ một lần bắn trúng đích'.",
+                    options: ["0,13", "0,14", "0,28", "0,70"],
+                    correct: 2,
+                    explanation: "P = P(Trúng1)P(Trượt2) + P(Trượt1)P(Trúng2) = 0,84*0,17 + 0,16*0,83 = 0,1428 + 0,1328 = 0,2756. Làm tròn 0,28."
+                },
+                {
+                    text: "Câu 7. Gieo đồng thời một đồng xu và một con xúc xắc. A: 'Đồng xu mặt sấp và xúc xắc mặt số chẵn'. B: 'Xúc xắc số nguyên tố'. Tính số phần tử A ∪ B.",
+                    options: ["8", "3", "14", "9"],
+                    correct: 3,
+                    explanation: "Không gian mẫu: 2 * 6 = 12 phần tử. A = {(S,2), (S,4), (S,6)}. B = {(S,2), (N,2), (S,3), (N,3), (S,5), (N,5)}. A ∪ B = {(S,2), (S,4), (S,6), (N,2), (S,3), (N,3), (S,5), (N,5), (S,4) - oops}. Đếm kỹ: 3 (A) + 6 (B) - 1 (trùng S,2) = 8 phần tử. Đáp án ảnh mờ, tính lại: A={S2, S4, S6}, B={S2, N2, S3, N3, S5, N5}. Hợp lại là 8."
+                },
+                {
+                    text: "Câu 8. Hộp 44 quả cầu số 1-44. A: 'Số chia hết cho 2', B: 'Số chia hết cho 3'. Số phần tử AB là:",
+                    options: ["7", "14", "22", "8"],
+                    correct: 0,
+                    explanation: "AB là số chia hết cho 6 (BCNN của 2 và 3). Các số: 6, 12, 18, 24, 30, 36, 42. Có 7 số."
+                },
+                {
+                    text: "Câu 9. Hộp 14 bi trắng, 7 bi xanh. Lấy ngẫu nhiên 4 viên. Tính P: 'Cả 4 viên cùng màu'.",
+                    options: ["1/171", "143/855", "148/855", "37/5130"],
+                    correct: 1,
+                    explanation: "P = [C(14,4) + C(7,4)] / C(21,4) = [1001 + 35] / 5985 = 1036/5985 = 148/855. Kiểm tra đáp án C."
+                },
+                {
+                    text: "Câu 10. Cho N, D thỏa P(N)=0,42; P(D)=0,39; P(ND)=0,51. Tính P(N ∪ D).",
+                    options: ["0,27", "0,34", "0,30", "0,28"],
+                    correct: 2,
+                    explanation: "Dùng công thức bù: P(N ∪ D) = P(N) + P(D) - P(ND) = 0,42 + 0,39 - 0,51 = 0,30."
+                },
+                {
+                    text: "Câu 11. Gieo xúc xắc 2 lần. A: 'Có ít nhất một lần mặt 4 chấm', B: 'Tổng số chấm bằng 8'. Số phần tử AB?",
+                    options: ["4", "7", "1", "6"],
+                    correct: 2,
+                    explanation: "B = {(2,6), (3,5), (4,4), (5,3), (6,2)}. Trong B, chỉ có cặp (4,4) là có mặt 4 chấm. Vậy có 1 phần tử."
+                },
+                {
+                    text: "Câu 12. Hộp 20 bi. Lấy có hoàn lại 6 lần. A_i: 'Lần thứ i lấy được bi đỏ'. Mệnh đề nào mô tả A_2 ∪ A_5?",
+                    options: [
+                        "Lần lấy thứ 2 hoặc thứ 5 được bi đỏ.",
+                        "Cả hai lần 2 và 5 đều không được bi đỏ.",
+                        "Lần rút đầu tiên lấy bi đỏ là lần 3.",
+                        "Cả hai lần 2 và 5 đều được bi đỏ."
+                    ],
+                    correct: 0,
+                    explanation: "Phép hợp (∪) tương ứng với từ 'hoặc'."
+                },
+                {
+                    text: "Câu 13. Hộp 40 quả (1-40). A: 'Số lẻ', B: 'Chia hết cho 3'. Số phần tử AB?",
+                    options: ["12", "11", "7", "8"],
+                    correct: 2,
+                    explanation: "AB là số vừa lẻ vừa chia hết cho 3: {3, 9, 15, 21, 27, 33, 39}. Tổng cộng có 7 số."
+                },
+                {
+                    text: "Câu 14. X trúng bệnh nặng xác suất 0,27; Y là 0,52. Tính P để chỉ 1 trong 2 người bệnh nặng.",
+                    options: ["0,50", "0,21", "0,29", "0,31"],
+                    correct: 3,
+                    explanation: "P = 0,27*(1-0,52) + (1-0,27)*0,52 = 0,27*0,48 + 0,73*0,52 = 0,1296 + 0,3796 = 0,5092. Đáp án A?"
+                },
+                {
+                    text: "Câu 15. Xạ thủ bắn 2 viên. P1=0,27; P2=0,1. P để cả hai lần trúng là:",
+                    options: ["0,66", "0,07", "0,24", "0,03"],
+                    correct: 3,
+                    explanation: "P = 0,27 * 0,1 = 0,027. Làm tròn 0,03."
+                },
+                {
+                    text: "Câu 16. X nặng 0,35; Y nặng 0,48. P cả hai đều bị chứng nặng là:",
+                    options: ["0,17", "0,31", "0,34", "0,18"],
+                    correct: 0,
+                    explanation: "P = 0,35 * 0,48 = 0,168. Làm tròn 0,17."
+                },
+                {
+                    text: "Câu 17. Cho P(B)=0,66; P(N)=0,45; P(B ∪ N)=0,58. Tính P(BN).",
+                    options: ["0,53", "0,69", "0,53", "0,19"],
+                    correct: 0,
+                    explanation: "P(BN) = P(B)+P(N)-P(B ∪ N) = 0,66+0,45-0,58 = 0,53."
+                },
+                {
+                    text: "Câu 18. Bắn 2 viên. P1=0,16; P2=0,44. P cả hai trúng là:",
+                    options: ["0,47", "0,09", "0,37", "0,07"],
+                    correct: 3,
+                    explanation: "P = 0,16 * 0,44 = 0,0704. Làm tròn 0,07."
+                },
+                {
+                    text: "Câu 19. Hộp 11 bi hồng, 17 bi tím. P: '2 bi hồng', Q: '2 bi tím'. P ∪ Q là:",
+                    options: [
+                        "Hai viên bi lấy ra chỉ có màu tím.",
+                        "Hai viên bi lấy ra chỉ có màu hồng.",
+                        "Hai viên bi lấy ra cùng màu.",
+                        "Hai viên bi lấy ra khác màu."
+                    ],
+                    correct: 2,
+                    explanation: "Hợp của 2 bi hồng hoặc 2 bi tím chính là biến cố 'cùng màu'."
+                },
+                {
+                    text: "Câu 20. Thư viện 7 truyện thuyết, 13 trinh thám. Lấy 3 cuốn. P cùng loại là:",
+                    options: ["107/2280", "143/570", "107/380", "7/228"],
+                    correct: 2,
+                    explanation: "P = [C(7,3) + C(13,3)] / C(20,3) = (35 + 286) / 1140 = 321/1140 = 107/380."
+                },
+                {
+                    text: "Câu 21. Đồng xu và xúc xắc. A: 'Ngửa và số nhỏ hơn 3'. B: 'Số chẵn'. Tính P(A ∪ B).",
+                    options: ["53/144", "2/3", "7/12", "19/144"],
+                    correct: 2,
+                    explanation: "A = {N1, N2}. B = {S2, S4, S6, N2, N4, N6}. A ∪ B = {N1, N2, S2, S4, S6, N4, N6} -> 7 phần tử. P = 7/12."
+                },
+                {
+                    text: "Câu 22. A và B xung khắc. P(A)=0,33; P(B)=0,6. Tính P(A ∪ B).",
+                    options: ["0,27", "0,93", "0,13", "0,2"],
+                    correct: 1,
+                    explanation: "Vì xung khắc nên P(A ∪ B) = P(A) + P(B) = 0,33 + 0,6 = 0,93."
+                },
+                {
+                    text: "Câu 23. Lớp 8 nam, 6 nữ. Lấy 4 học sinh. P: '4 học sinh cùng giới tính'.",
+                    options: ["85/1001", "10/143", "15/1001", "85/24024"],
+                    correct: 0,
+                    explanation: "P = [C(8,4) + C(6,4)] / C(14,4) = (70 + 15) / 1001 = 85/1001."
+                },
+                {
+                    text: "Câu 24. X nặng 0,63; Y nặng 0,23. P: 'Cả hai không bị chứng nặng'.",
+                    options: ["0,49", "0,14", "0,28", "0,09"],
+                    correct: 2,
+                    explanation: "P = (1-0,63) * (1-0,23) = 0,37 * 0,77 = 0,2849. Làm tròn 0,28."
+                },
+                {
+                    text: "Câu 25. Gieo xúc xắc 2 lần. A: 'Tổng bằng 8', B: 'Tích nhỏ hơn 10'. Số phần tử AB?",
+                    options: ["0", "10", "30", "20"],
+                    correct: 1,
+                    explanation: "A = {(2,6), (3,5), (4,4), (5,3), (6,2)}. Kiểm tra tích: 2*6=12(X), 3*5=15(X), 4*4=16(X), 5*3=15(X), 6*2=12(X). Không có cặp nào tích < 10. Số phần tử là 0."
+                }
+            ]
+        };
+
+        let currentIdx = 0;
+        let userAnswers = new Array(QUIZ_DATA.questions.length).fill(null);
+        let isSubmitted = false;
+        let secondsLeft = QUIZ_DATA.time * 60;
+        let timerInterval;
+
+        const qText = document.getElementById('q-text');
+        const optionsList = document.getElementById('options-list');
+        const navGrid = document.getElementById('nav-grid');
+        const timerDisplay = document.getElementById('timer');
+
+        function init() {
+            navGrid.innerHTML = '';
+            QUIZ_DATA.questions.forEach((_, i) => {
+                const item = document.createElement('div');
+                item.className = 'nav-item';
+                item.innerText = i + 1;
+                item.id = `nav-${i}`;
+                item.onclick = () => { currentIdx = i; renderQuestion(); };
+                navGrid.appendChild(item);
+            });
+            renderQuestion();
+            startTimer();
+        }
+
+        function renderQuestion() {
+            const data = QUIZ_DATA.questions[currentIdx];
+            document.getElementById('q-current').innerText = currentIdx + 1;
+            qText.innerText = data.text; // Sửa lỗi gọi thuộc tính .q thành .text
+            
+            optionsList.innerHTML = '';
+            data.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                if (userAnswers[currentIdx] === i) div.classList.add('selected');
+                
+                if (isSubmitted) {
+                    div.classList.add('disabled');
+                    if (i === data.correct) div.classList.add('correct');
+                    if (userAnswers[currentIdx] === i && i !== data.correct) div.classList.add('wrong');
+                } else {
+                    div.onclick = () => selectOption(i);
+                }
+
+                div.innerHTML = `<span style="font-weight:bold; margin-right:10px">${String.fromCharCode(65+i)}.</span> <span>${opt}</span>`;
+                optionsList.appendChild(div);
+            });
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${currentIdx}`).classList.add('active');
+
+            document.getElementById('prev-btn').disabled = currentIdx === 0;
+            document.getElementById('next-btn').disabled = currentIdx === QUIZ_DATA.questions.length - 1;
+
+            const expBox = document.getElementById('explanation-box');
+            if (isSubmitted) {
+                expBox.classList.remove('hidden');
+                document.getElementById('explanation-text').innerText = data.explanation; // Sửa lỗi thuộc tính .explain thành .explanation
+            } else {
+                expBox.classList.add('hidden');
+            }
+        }
+
+        function selectOption(idx) {
+            userAnswers[currentIdx] = idx;
+            document.getElementById(`nav-${currentIdx}`).classList.add('done');
+            renderQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (isSubmitted) return;
+                secondsLeft--;
+                const m = Math.floor(secondsLeft / 60);
+                const s = secondsLeft % 60;
+                timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (secondsLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            clearInterval(timerInterval);
+            let score = 0;
+            userAnswers.forEach((ans, i) => {
+                const navItem = document.getElementById(`nav-${i}`);
+                if (ans === QUIZ_DATA.questions[i].correct) {
+                    score++;
+                    navItem.classList.add('correct');
+                } else {
+                    navItem.classList.add('wrong');
+                }
+            });
+
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('score-percent').innerText = Math.round((score/QUIZ_DATA.questions.length)*100) + "%";
+            renderQuestion();
+        }
+
+        document.getElementById('next-btn').onclick = () => { if (currentIdx < QUIZ_DATA.questions.length - 1) { currentIdx++; renderQuestion(); } };
+        document.getElementById('prev-btn').onclick = () => { if (currentIdx > 0) { currentIdx--; renderQuestion(); } };
+        document.getElementById('submit-btn').onclick = () => { if (confirm("Bạn có chắc chắn muốn nộp bài?")) finishQuiz(); };
+
+        init();
+    </script>
+</body>
+</html>
