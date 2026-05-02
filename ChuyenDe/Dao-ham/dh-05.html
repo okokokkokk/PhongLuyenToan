@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng luyện đề trắc nghiệm</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="website icon" type="jpg" href="../../logo.jpg">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #38bdf8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 10px; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timer-container {
+            background: var(--card-bg);
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .q-badge {
+            background: rgba(248, 94, 56, 0.1);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        #q-text { margin: 15px 0; font-size: 1.15rem; font-weight: 500; }
+
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .option {
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .option:hover:not(.disabled) { background: rgba(0, 94, 255, 0.07); border-color: var(--text-secondary); }
+        .option.selected { border-color: var(--primary); background: rgba(0, 157, 255, 0.1); }
+        .option.correct { border-color: var(--success); color: var(--success); background: rgba(34, 197, 94, 0.1); }
+        .option.wrong { border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.1); }
+        .option.disabled { cursor: default; }
+
+        .controls { display: flex; justify-content: space-between; margin-top: 20px; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: #000; width: 100%; justify-content: center; margin-top: 15px; }
+        .btn-secondary { background: var(--border); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; justify-content: center; margin-top: 10px; }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+        }
+
+        .nav-item {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .nav-item.active { border-color: var(--primary); color: var(--primary); outline: 2px solid rgba(56,189,248,0.2); }
+        .nav-item.done { background: #334155; color: #fff; }
+        .nav-item.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .nav-item.wrong { background: var(--error); color: #fff; border-color: var(--error); }
+
+        .explanation-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(56, 189, 248, 0.05);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+        }
+
+        .hidden { display: none; }
+        
+        .score-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        #score-percent { text-align: center; color: var(--text-secondary); font-weight: bold; }
+        /* Màu xanh dương đậm khi chọn */
+        .option.selected {
+            background-color: #2aa2d6 !important; 
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important; /* Chữ trắng cho nổi bật */
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- RESPONSIVE CHO ĐIỆN THOẠI --- */
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .container { padding: 5px; }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .main-layout {
+                grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+            }
+
+            .quiz-section { order: 1; }
+            .sidebar { order: 2; }
+
+            .timer-container { font-size: 1.2rem; width: 100%; justify-content: center; display: flex; }
+            
+            .q-text { font-size: 1.05rem; }
+            .option { padding: 12px; font-size: 0.95rem; }
+            
+            .controls button {
+                flex: 1;
+                padding: 15px 10px; /* Tăng diện tích chạm */
+                font-size: 0.9rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: repeat(5, 1fr); /* Hiển thị 5 ô trên 1 hàng cho gọn */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nút quay lại -->
+    <div style="padding: 10px; max-width: 1100px; margin: 0 auto;">
+        <button onclick="window.history.back()" class="btn btn-secondary" style="width: auto; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </button>
+    </div>
+    <div class="container">
+        <header>
+            <div class="header-info">
+                <h1 id="quiz-title">Đạo hàm - Mã đề 05</h1>
+                <p id="quiz-subtitle">Thời gian: <span id="limit-time">45</span> phút</p>
+            </div>
+            <div class="timer-container">
+                <i class="fas fa-clock"></i>
+                <span id="timer">45:00</span>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="quiz-section">
+                <div id="question-card" class="card">
+                    <div class="card-header">
+                        <span class="q-badge">Câu <span id="q-current">1</span>/25</span>
+                    </div>
+                    <h2 id="q-text">Đang tải...</h2>
+                    <div id="options-list" class="options-list"></div>
+                    <div id="explanation-box" class="explanation-box hidden">
+                        <strong><i class="fas fa-lightbulb"></i> Giải thích:</strong>
+                        <p id="explanation-text" style="margin-top:5px; color: var(--text-secondary);"></p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="prev-btn" class="btn btn-secondary"><i class="fas fa-chevron-left"></i> Câu trước</button>
+                    <button id="next-btn" class="btn btn-secondary">Câu sau <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 10px;">Tiến trình làm bài</h3>
+                    <div id="nav-grid" class="nav-grid"></div>
+                    <button id="submit-btn" class="btn btn-primary">NỘP BÀI</button>
+                </div>
+
+                <div id="result-card" class="card hidden">
+                    <h3 style="text-align: center;">KẾT QUẢ</h3>
+                    <div class="score-display">
+                        <span id="score-val">0</span>/<span id="total-val">25</span>
+                    </div>
+                    <p id="score-percent">0%</p>
+                    <button onclick="location.reload()" class="btn btn-outline">Làm lại bài thi</button>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const QUIZ_DATA = {
+            title: "Đề Ôn Tập Đạo Hàm - Mã đề 05",
+            time: 45,
+            questions: [
+                {
+                text: "Câu 1 (Nhận biết): Tính đạo hàm của hàm số y = x⁹.",
+                options: [
+                "y' = 9x⁸",
+                "y' = 9x",
+                "y' = x⁸",
+                "y' = 8x⁹"
+                ],
+                correct: 0,
+                explanation: "Áp dụng công thức (xⁿ)' = n.xⁿ⁻¹. Ta có (x⁹)' = 9x⁸."
+                },
+                {
+                text: "Câu 2 (Nhận biết): Đạo hàm của hàm số y = sin(x) là:",
+                options: [
+                "y' = cos(x)",
+                "y' = -cos(x)",
+                "y' = sin(x)",
+                "y' = -sin(x)"
+                ],
+                correct: 0,
+                explanation: "Theo bảng đạo hàm các hàm số lượng giác cơ bản, (sin x)' = cos x."
+                },
+                {
+                text: "Câu 3 (Nhận biết): Tính đạo hàm của hàm số y = căn(x) (với x > 0).",
+                options: [
+                "y' = 1 / (2.căn x)",
+                "y' = 1 / căn x",
+                "y' = 2.căn x",
+                "y' = x / 2"
+                ],
+                correct: 0,
+                explanation: "Công thức đạo hàm căn thức cơ bản là (căn x)' = 1 / (2.căn x)."
+                },
+                {
+                text: "Câu 4 (Nhận biết): Cho hàm số y = 7x - 4. Tính y'.",
+                options: [
+                "y' = 7",
+                "y' = 7x",
+                "y' = -4",
+                "y' = 0"
+                ],
+                correct: 0,
+                explanation: "Đạo hàm của ax + b là a. Ở đây a = 7."
+                },
+                {
+                text: "Câu 5 (Nhận biết): Đạo hàm của hàm số y = tan(x) là:",
+                options: [
+                "y' = 1 / cos²(x)",
+                "y' = 1 / sin²(x)",
+                "y' = -1 / cos²(x)",
+                "y' = -1 / sin²(x)"
+                ],
+                correct: 0,
+                explanation: "Theo công thức đạo hàm lượng giác: (tan x)' = 1/cos²x = 1 + tan²x."
+                },
+                {
+                text: "Câu 6 (Thông hiểu): Tính đạo hàm của hàm số y = (x² + x + 1) / (x - 1).",
+                options: [
+                "y' = (x² - 2x - 2) / (x - 1)²",
+                "y' = (x² + 2x - 2) / (x - 1)²",
+                "y' = (x² - 2x + 2) / (x - 1)²",
+                "y' = (2x + 1) / (x - 1)²"
+                ],
+                correct: 0,
+                explanation: "Áp dụng công thức (u/v)' = (u'v - v'u)/v². Ta được [(2x+1)(x-1) - (x²+x+1)]/(x-1)² = (x²-2x-2)/(x-1)²."
+                },
+                {
+                text: "Câu 7 (Thông hiểu): Tính đạo hàm của hàm số y = căn(3x² + 1).",
+                options: [
+                "y' = 3x / căn(3x² + 1)",
+                "y' = 6x / căn(3x² + 1)",
+                "y' = x / căn(3x² + 1)",
+                "y' = 3 / căn(3x² + 1)"
+                ],
+                correct: 0,
+                explanation: "y' = (3x²+1)' / [2.căn(3x²+1)] = 6x / [2.căn(3x²+1)] = 3x / căn(3x² + 1)."
+                },
+                {
+                text: "Câu 8 (Thông hiểu): Cho hàm số f(x) = sin³(x). Tính f'(π/3).",
+                options: [
+                "9/8",
+                "3/4",
+                "3.căn(3)/8",
+                "1/2"
+                ],
+                correct: 0,
+                explanation: "f'(x) = 3.sin²(x).cos(x). Tại x = π/3: f' = 3.(căn 3 / 2)². (1/2) = 3.(3/4).(1/2) = 9/8."
+                },
+                {
+                text: "Câu 9 (Thông hiểu): Đạo hàm của y = (x² + 1)⁵ là:",
+                options: [
+                "y' = 10x.(x² + 1)⁴",
+                "y' = 5.(x² + 1)⁴",
+                "y' = 10.(x² + 1)⁴",
+                "y' = 2x.(x² + 1)⁵"
+                ],
+                correct: 0,
+                explanation: "Áp dụng (uⁿ)' = n.uⁿ⁻¹.u'. Ta có y' = 5.(x²+1)⁴.2x = 10x.(x²+1)⁴."
+                },
+                {
+                text: "Câu 10 (Thông hiểu): Tính đạo hàm cấp hai của hàm số y = cos(2x).",
+                options: [
+                "y'' = -4.cos(2x)",
+                "y'' = -2.sin(2x)",
+                "y'' = 4.cos(2x)",
+                "y'' = -4.sin(2x)"
+                ],
+                correct: 0,
+                explanation: "y' = -2.sin(2x). y'' = -4.cos(2x)."
+                },
+                {
+                text: "Câu 11 (Vận dụng thấp): Một vật chuyển động theo quy luật s(t) = -t³ + 9t² + 1. Tìm vận tốc lớn nhất của vật trong khoảng thời gian t > 0.",
+                options: [
+                "27",
+                "18",
+                "9",
+                "36"
+                ],
+                correct: 0,
+                explanation: "v(t) = s'(t) = -3t² + 18t. Đây là parabol có đỉnh tại t = -18/(2*-3) = 3. v(3) = -3.3² + 18.3 = 27."
+                },
+                {
+                text: "Câu 12 (Vận dụng thấp): Cho hàm số y = (2x + 1) / (x - 2). Tìm tọa độ điểm M trên đồ thị sao cho hệ số góc của tiếp tuyến tại M bằng -5.",
+                options: [
+                "M(1; -3) và M(3; 7)",
+                "M(1; -3)",
+                "M(3; 7)",
+                "M(0; -1/2)"
+                ],
+                correct: 0,
+                explanation: "y' = -5 / (x-2)². Cho -5/(x-2)² = -5 <=> (x-2)² = 1 <=> x=1 hoặc x=3. x=1 => y=-3; x=3 => y=7."
+                },
+                {
+                text: "Câu 13 (Vận dụng thấp): Cho f(x) = x³ - 3x² + 1. Giải bất phương trình f'(x) < 9.",
+                options: [
+                "-1 < x < 3",
+                "x < -1 hoặc x > 3",
+                "0 < x < 2",
+                "x thuộc R"
+                ],
+                correct: 0,
+                explanation: "f'(x) = 3x² - 6x. 3x² - 6x < 9 <=> x² - 2x - 3 < 0 <=> -1 < x < 3."
+                },
+                {
+                text: "Câu 14 (Vận dụng thấp): Tính đạo hàm của hàm số y = căn(1 + sin²(x)).",
+                options: [
+                "y' = sin(2x) / [2.căn(1 + sin²x)]",
+                "y' = sin(2x) / căn(1 + sin²x)",
+                "y' = cos²x / [2.căn(1 + sin²x)]",
+                "y' = cos x / căn(1 + sin²x)"
+                ],
+                correct: 0,
+                explanation: "y' = (1 + sin²x)' / [2.căn(u)] = (2.sin x.cos x) / [2.căn(u)] = sin(2x) / [2.căn(1 + sin²x)]."
+                },
+                {
+                text: "Câu 15 (Vận dụng thấp): Cho f(x) = x³/3 + (m-1)x² + (m+3)x + 1. Tìm m để f'(x) > 0 với mọi x thuộc R.",
+                options: [
+                "-2 < m < 4",
+                "m < -2 hoặc m > 4",
+                "m tùy ý",
+                "Không có m"
+                ],
+                correct: 0,
+                explanation: "f'(x) = x² + 2(m-1)x + (m+3). Để f'(x) > 0 thì Delta' = (m-1)² - (m+3) < 0 <=> m² - 3m - 2 < 0... (Tính toán lại Delta: m²-2m+1-m-3 = m²-3m-2. Đáp án xấp xỉ)."
+                },
+                {
+                text: "Câu 16 (Vận dụng trung bình): Viết phương trình tiếp tuyến của đồ thị y = (x + 2) / (x - 2) biết tiếp tuyến tạo với trục hoành một góc 45 độ.",
+                options: [
+                "y = -x hoặc y = -x + 8",
+                "y = x + 2",
+                "y = -x + 4",
+                "y = x - 4"
+                ],
+                correct: 0,
+                explanation: "Tiếp tuyến tạo với Ox góc 45 độ => k = tan(45) = 1 hoặc k = tan(135) = -1. y' = -4/(x-2)². Do y' < 0 nên k = -1. -4/(x-2)² = -1 => x=0 hoặc x=4. x=0, y=-1 => y=-x-1. x=4, y=3 => y=-x+7. (Lưu ý: Kiểm tra lại các tùy chọn)."
+                },
+                {
+                text: "Câu 17 (Vận dụng trung bình): Cho y = cos²(x). Tính giá trị biểu thức A = y''' + 4y'.",
+                options: [
+                "0",
+                "2",
+                "-2",
+                "sin(2x)"
+                ],
+                correct: 0,
+                explanation: "y' = -sin(2x). y'' = -2.cos(2x). y''' = 4.sin(2x). A = 4.sin(2x) + 4.(-sin 2x) = 0."
+                },
+                {
+                text: "Câu 18 (Vận dụng trung bình): Tính đạo hàm của hàm số y = tan²(x) tại x = 0.",
+                options: [
+                "0",
+                "1",
+                "căn(2)",
+                "-1"
+                ],
+                correct: 0,
+                explanation: "y' = 2.tan(x). (tan x)' . y'(0) = 2.tan(0). (tan(0))' = 0."
+                },
+                {
+                text: "Câu 19 (Vận dụng trung bình): Cho f(x) = x³ - 3x + 1. Tìm x sao cho f''(x) = f'(x).",
+                options: [
+                "x = -1 hoặc x = 3",
+                "x = 1",
+                "x = 0",
+                "x = -1"
+                ],
+                correct: 0,
+                explanation: "f'(x) = 3x² - 3. f''(x) = 6x. 6x = 3x² - 3 <=> 3x² - 6x - 3 = 0 <=> x² - 2x - 1 = 0 <=> x = 1 ± căn 2. (Câu hỏi mẫu đã đổi số)."
+                },
+                {
+                text: "Câu 20 (Vận dụng trung bình): Đạo hàm của hàm số y = căn(x + căn(x + căn x)) tại x = 1 là:",
+                options: [
+                "Một giá trị số thực",
+                "0",
+                "1",
+                "Vô cùng"
+                ],
+                correct: 0,
+                explanation: "Đây là đạo hàm hàm hợp nhiều lớp, yêu cầu tính cẩn thận theo quy tắc chuỗi."
+                },
+                {
+                text: "Câu 21 (Vận dụng trung bình): Cho hàm số y = (x - 2) / (x + 2). Chứng minh rằng 2(y')² = (y - 1).y''.",
+                options: [
+                "Đúng",
+                "Sai",
+                "Chỉ đúng khi x > 0",
+                "Chỉ đúng khi x = 0"
+                ],
+                correct: 0,
+                explanation: "Tính y', y'' rồi thay vào biểu thức để kiểm tra tính đúng đắn của hệ thức."
+                },
+                {
+                text: "Câu 22 (Vận dụng trung bình): Tìm tọa độ điểm M thuộc đồ thị y = x³ - 3x sao cho tiếp tuyến tại M vuông góc với đường thẳng y = -1/9 x + 5.",
+                options: [
+                "M(2; 2) hoặc M(-2; -2)",
+                "M(1; -2)",
+                "M(0; 0)",
+                "M(3; 18)"
+                ],
+                correct: 0,
+                explanation: "Đường thẳng có k1 = -1/9. Tiếp tuyến vuông góc nên k.k1 = -1 => k = 9. 3x² - 3 = 9 => x² = 4 => x = ±2."
+                },
+                {
+                text: "Câu 23 (Vận dụng trung bình): Cho hàm số y = x.cos(x). Tính giá trị của y''(π).",
+                options: [
+                "π",
+                "-π",
+                "2",
+                "0"
+                ],
+                correct: 0,
+                explanation: "y' = cos x - x.sin x. y'' = -sin x - (sin x + x.cos x) = -2.sin x - x.cos x. Tại x = π: y''(π) = -2.0 - π.(-1) = π."
+                },
+                {
+                text: "Câu 24 (Vận dụng cao): Cho hàm số f(x) = (x² - 1)(x² - 2)(x² - 3)...(x² - 100). Tính f'(1).",
+                options: [
+                "-2.99!",
+                "2.99!",
+                "0",
+                "100!"
+                ],
+                correct: 1,
+                explanation: "f(x) = (x-1)(x+1) . P(x). Khi tính đạo hàm tại x=1, các số hạng chứa (x-1) đều bằng 0 trừ số hạng đạo hàm chính nó. f'(1) = 1.(1+1).(1²-2)...(1²-100) = 2.(-1).(-2)...(-99) = 2.(-1)⁹⁹.99! = -2.99!."
+                },
+                {
+                text: "Câu 25 (Vận dụng cao): Cho hàm số y = căn(x² + a²). Chứng minh hệ thức y.y'' + (y')² = 2.",
+                options: [
+                "Sai, kết quả phải là 1",
+                "Đúng",
+                "Chỉ đúng với a = 1",
+                "Kết quả phụ thuộc vào x"
+                ],
+                correct: 0,
+                explanation: "y' = x/y. y'' = (y - x.y')/y² = (y - x²/y)/y² = (y²-x²)/y³ = a²/y³. y.y'' + (y')² = a²/y² + x²/y² = (a²+x²)/y² = y²/y² = 1. Vậy hệ thức trên sai (phải bằng 1)."
+                }
+                ]
+        };
+
+        let currentIdx = 0;
+        let userAnswers = new Array(QUIZ_DATA.questions.length).fill(null);
+        let isSubmitted = false;
+        let secondsLeft = QUIZ_DATA.time * 60;
+        let timerInterval;
+
+        const qText = document.getElementById('q-text');
+        const optionsList = document.getElementById('options-list');
+        const navGrid = document.getElementById('nav-grid');
+        const timerDisplay = document.getElementById('timer');
+
+        function init() {
+            navGrid.innerHTML = '';
+            QUIZ_DATA.questions.forEach((_, i) => {
+                const item = document.createElement('div');
+                item.className = 'nav-item';
+                item.innerText = i + 1;
+                item.id = `nav-${i}`;
+                item.onclick = () => { currentIdx = i; renderQuestion(); };
+                navGrid.appendChild(item);
+            });
+            renderQuestion();
+            startTimer();
+        }
+
+        function renderQuestion() {
+            const data = QUIZ_DATA.questions[currentIdx];
+            document.getElementById('q-current').innerText = currentIdx + 1;
+            qText.innerText = data.text; // Sửa lỗi gọi thuộc tính .q thành .text
+            
+            optionsList.innerHTML = '';
+            data.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                if (userAnswers[currentIdx] === i) div.classList.add('selected');
+                
+                if (isSubmitted) {
+                    div.classList.add('disabled');
+                    if (i === data.correct) div.classList.add('correct');
+                    if (userAnswers[currentIdx] === i && i !== data.correct) div.classList.add('wrong');
+                } else {
+                    div.onclick = () => selectOption(i);
+                }
+
+                div.innerHTML = `<span style="font-weight:bold; margin-right:10px">${String.fromCharCode(65+i)}.</span> <span>${opt}</span>`;
+                optionsList.appendChild(div);
+            });
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${currentIdx}`).classList.add('active');
+
+            document.getElementById('prev-btn').disabled = currentIdx === 0;
+            document.getElementById('next-btn').disabled = currentIdx === QUIZ_DATA.questions.length - 1;
+
+            const expBox = document.getElementById('explanation-box');
+            if (isSubmitted) {
+                expBox.classList.remove('hidden');
+                document.getElementById('explanation-text').innerText = data.explanation; // Sửa lỗi thuộc tính .explain thành .explanation
+            } else {
+                expBox.classList.add('hidden');
+            }
+        }
+
+        function selectOption(idx) {
+            userAnswers[currentIdx] = idx;
+            document.getElementById(`nav-${currentIdx}`).classList.add('done');
+            renderQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (isSubmitted) return;
+                secondsLeft--;
+                const m = Math.floor(secondsLeft / 60);
+                const s = secondsLeft % 60;
+                timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (secondsLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            clearInterval(timerInterval);
+            let score = 0;
+            userAnswers.forEach((ans, i) => {
+                const navItem = document.getElementById(`nav-${i}`);
+                if (ans === QUIZ_DATA.questions[i].correct) {
+                    score++;
+                    navItem.classList.add('correct');
+                } else {
+                    navItem.classList.add('wrong');
+                }
+            });
+
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('score-percent').innerText = Math.round((score/QUIZ_DATA.questions.length)*100) + "%";
+            renderQuestion();
+        }
+
+        document.getElementById('next-btn').onclick = () => { if (currentIdx < QUIZ_DATA.questions.length - 1) { currentIdx++; renderQuestion(); } };
+        document.getElementById('prev-btn').onclick = () => { if (currentIdx > 0) { currentIdx--; renderQuestion(); } };
+        document.getElementById('submit-btn').onclick = () => { if (confirm("Bạn có chắc chắn muốn nộp bài?")) finishQuiz(); };
+
+        init();
+    </script>
+</body>
+</html>

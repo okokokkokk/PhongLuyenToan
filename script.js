@@ -41,6 +41,27 @@ const deThiList = [
     soCau: 25,
     thoiGian: 45
   },
+  {
+    chuyenDe: "Đạo Hàm",
+    tenDe: "Đề số 03 - Đạo hàm",
+    linkDe: "ChuyenDe/Dao-ham/dh-03.html",
+    soCau: 25,
+    thoiGian: 45
+  },
+  {
+    chuyenDe: "Đạo Hàm",
+    tenDe: "Đề số 04 - Đạo hàm",
+    linkDe: "ChuyenDe/Dao-ham/dh-04.html",
+    soCau: 25,
+    thoiGian: 45
+  },
+  {
+    chuyenDe: "Đạo Hàm",
+    tenDe: "Đề số 05 - Đạo hàm",
+    linkDe: "ChuyenDe/Dao-ham/dh-05.html",
+    soCau: 25,
+    thoiGian: 45
+  },
 ];
 
 // Hàm hiển thị chuyên đề ở trang chủ index.html[cite: 7]
