@@ -5,14 +5,14 @@ function renderDeTheoChuyenDe() {
   if (!chuyenDeParam) return;
 
   document.getElementById('chuyen-de-title').textContent = `Chuyên đề: ${chuyenDeParam}`;
-
   const container = document.getElementById('de-thi-container');
   container.innerHTML = '';
 
+  // Lọc đề từ danh sách cố định trong script.js
   const filteredDe = deThiList.filter(de => de.chuyenDe === chuyenDeParam);
 
   if (filteredDe.length === 0) {
-    container.innerHTML = `<p style="text-align:center; padding:80px; color:#94a3b8; font-size:18px;">Chưa có đề nào trong chuyên đề này.</p>`;
+    container.innerHTML = `<p style="text-align:center; padding:80px; color:#94a3b8;">Sắp ra mắt đề mới cho chuyên đề này!</p>`;
     return;
   }
 
@@ -21,7 +21,7 @@ function renderDeTheoChuyenDe() {
       <div class="card">
         <div class="card-image">
           <img src="hanu2.jpg" alt="Đề">
-          <div class="vip-badge">VIP</div>
+          <div class="vip-badge">ĐỀ THI</div>
         </div>
         <div class="card-body">
           <div class="title">${de.tenDe}</div>
@@ -30,7 +30,7 @@ function renderDeTheoChuyenDe() {
             <div>⏱️ ${de.thoiGian} phút</div>
           </div>
           <button class="button" onclick="moDeThi('${de.linkDe}')">
-            Bắt đầu thi
+            Bắt đầu làm bài
           </button>
         </div>
       </div>
@@ -39,9 +39,4 @@ function renderDeTheoChuyenDe() {
   });
 }
 
-// Khởi tạo trang chuyên đề
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.location.pathname.includes('chuyende.html')) {
-    renderDeTheoChuyenDe();
-  }
-});
+document.addEventListener('DOMContentLoaded', renderDeTheoChuyenDe);
