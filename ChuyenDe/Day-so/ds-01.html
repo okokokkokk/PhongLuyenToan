@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng luyện đề trắc nghiệm</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="website icon" type="jpg" href="../../logo.jpg">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #38bdf8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 10px; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timer-container {
+            background: var(--card-bg);
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .q-badge {
+            background: rgba(248, 94, 56, 0.1);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        #q-text { margin: 15px 0; font-size: 1.15rem; font-weight: 500; }
+
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .option {
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .option:hover:not(.disabled) { background: rgba(0, 94, 255, 0.07); border-color: var(--text-secondary); }
+        .option.selected { border-color: var(--primary); background: rgba(0, 157, 255, 0.1); }
+        .option.correct { border-color: var(--success); color: var(--success); background: rgba(34, 197, 94, 0.1); }
+        .option.wrong { border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.1); }
+        .option.disabled { cursor: default; }
+
+        .controls { display: flex; justify-content: space-between; margin-top: 20px; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: #000; width: 100%; justify-content: center; margin-top: 15px; }
+        .btn-secondary { background: var(--border); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; justify-content: center; margin-top: 10px; }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+        }
+
+        .nav-item {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .nav-item.active { border-color: var(--primary); color: var(--primary); outline: 2px solid rgba(56,189,248,0.2); }
+        .nav-item.done { background: #334155; color: #fff; }
+        .nav-item.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .nav-item.wrong { background: var(--error); color: #fff; border-color: var(--error); }
+
+        .explanation-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(56, 189, 248, 0.05);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+        }
+
+        .hidden { display: none; }
+        
+        .score-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        #score-percent { text-align: center; color: var(--text-secondary); font-weight: bold; }
+        /* Màu xanh dương đậm khi chọn */
+        .option.selected {
+            background-color: #2aa2d6 !important; 
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important; /* Chữ trắng cho nổi bật */
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- RESPONSIVE CHO ĐIỆN THOẠI --- */
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .container { padding: 5px; }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .main-layout {
+                grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+            }
+
+            .quiz-section { order: 1; }
+            .sidebar { order: 2; }
+
+            .timer-container { font-size: 1.2rem; width: 100%; justify-content: center; display: flex; }
+            
+            .q-text { font-size: 1.05rem; }
+            .option { padding: 12px; font-size: 0.95rem; }
+            
+            .controls button {
+                flex: 1;
+                padding: 15px 10px; /* Tăng diện tích chạm */
+                font-size: 0.9rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: repeat(5, 1fr); /* Hiển thị 5 ô trên 1 hàng cho gọn */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nút quay lại -->
+    <div style="padding: 10px; max-width: 1100px; margin: 0 auto;">
+        <button onclick="window.history.back()" class="btn btn-secondary" style="width: auto; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </button>
+    </div>
+    <div class="container">
+        <header>
+            <div class="header-info">
+                <h1 id="quiz-title">Dãy Số - Mã đề 01</h1>
+                <p id="quiz-subtitle">Thời gian: <span id="limit-time">45</span> phút</p>
+            </div>
+            <div class="timer-container">
+                <i class="fas fa-clock"></i>
+                <span id="timer">45:00</span>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="quiz-section">
+                <div id="question-card" class="card">
+                    <div class="card-header">
+                        <span class="q-badge">Câu <span id="q-current">1</span>/25</span>
+                    </div>
+                    <h2 id="q-text">Đang tải...</h2>
+                    <div id="options-list" class="options-list"></div>
+                    <div id="explanation-box" class="explanation-box hidden">
+                        <strong><i class="fas fa-lightbulb"></i> Giải thích:</strong>
+                        <p id="explanation-text" style="margin-top:5px; color: var(--text-secondary);"></p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="prev-btn" class="btn btn-secondary"><i class="fas fa-chevron-left"></i> Câu trước</button>
+                    <button id="next-btn" class="btn btn-secondary">Câu sau <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 10px;">Tiến trình làm bài</h3>
+                    <div id="nav-grid" class="nav-grid"></div>
+                    <button id="submit-btn" class="btn btn-primary">NỘP BÀI</button>
+                </div>
+
+                <div id="result-card" class="card hidden">
+                    <h3 style="text-align: center;">KẾT QUẢ</h3>
+                    <div class="score-display">
+                        <span id="score-val">0</span>/<span id="total-val">25</span>
+                    </div>
+                    <p id="score-percent">0%</p>
+                    <button onclick="location.reload()" class="btn btn-outline">Làm lại bài thi</button>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const QUIZ_DATA = {
+            title: "Đề Ôn Tập Dãy Số - Mã đề 01",
+            time: 45,
+            questions: [
+{
+text: "Câu 1 (Nhận biết): Cho dãy số (un) với un = 2n - 1. Số hạng thứ 3 của dãy số là:",
+options: [
+"5",
+"3",
+"1",
+"7"
+],
+correct: 0,
+explanation: "Thay n = 3 vào công thức: u3 = 2(3) - 1 = 5."
+},
+{
+text: "Câu 2 (Nhận biết): Một cấp số cộng (un) có số hạng đầu u1 và công sai d. Công thức số hạng tổng quát là:",
+options: [
+"un = u1 + (n-1)d",
+"un = u1 + nd",
+"un = u1.d^(n-1)",
+"un = u1 - (n-1)d"
+],
+correct: 0,
+explanation: "Đây là định nghĩa số hạng tổng quát của cấp số cộng."
+},
+{
+text: "Câu 3 (Nhận biết): Dãy số nào sau đây là một cấp số nhân?",
+options: [
+"2; 4; 8; 16",
+"1; 2; 3; 4",
+"2; 4; 6; 8",
+"5; 10; 15; 20"
+],
+correct: 0,
+explanation: "Dãy 2; 4; 8; 16 có số hạng sau gấp 2 lần số hạng trước (q=2)."
+},
+{
+text: "Câu 4 (Nhận biết): Cho cấp số cộng có u1 = 3 và u2 = 7. Công sai d của cấp số cộng đó là:",
+options: [
+"4",
+"-4",
+"10",
+"21"
+],
+correct: 0,
+explanation: "d = u2 - u1 = 7 - 3 = 4."
+},
+{
+text: "Câu 5 (Nhận biết): Cho cấp số nhân (un) có u1 = 2 và công bội q = 3. Số hạng u2 bằng:",
+options: [
+"6",
+"5",
+"2/3",
+"9"
+],
+correct: 0,
+explanation: "u2 = u1.q = 2.3 = 6."
+},
+{
+text: "Câu 6 (Thông hiểu): Cho dãy số (un) xác định bởi u1 = 1 và un+1 = un + 2. Số hạng u4 là:",
+options: [
+"7",
+"5",
+"9",
+"3"
+],
+correct: 0,
+explanation: "u1=1; u2=3; u3=5; u4=7."
+},
+{
+text: "Câu 7 (Thông hiểu): Trong các dãy số sau, dãy số nào bị chặn trên?",
+options: [
+"un = 1/n",
+"un = n²",
+"un = 2^n",
+"un = n + 1"
+],
+correct: 0,
+explanation: "un = 1/n luôn nhỏ hơn hoặc bằng 1 với mọi n nguyên dương."
+},
+{
+text: "Câu 8 (Thông hiểu): Cho cấp số cộng (un) có u1 = -3 và d = 5. Số hạng thứ mấy của dãy số bằng 42?",
+options: [
+"10",
+"9",
+"11",
+"12"
+],
+correct: 0,
+explanation: "42 = -3 + (n-1).5 => 45 = 5(n-1) => n-1 = 9 => n = 10."
+},
+{
+text: "Câu 9 (Thông hiểu): Cho cấp số nhân (un) có u1 = -2 và u2 = 8. Công bội q của cấp số nhân là:",
+options: [
+"-4",
+"4",
+"6",
+"-10"
+],
+correct: 0,
+explanation: "q = u2 / u1 = 8 / (-2) = -4."
+},
+{
+text: "Câu 10 (Thông hiểu): Tính tổng 10 số hạng đầu tiên của cấp số cộng có u1 = 2 và d = 3.",
+options: [
+"155",
+"170",
+"310",
+"30"
+],
+correct: 0,
+explanation: "S10 = (10/2) * [22 + (10-1)3] = 5 * [4 + 27] = 5 * 31 = 155."
+},
+{
+text: "Câu 11 (Thông hiểu): Tìm x để ba số 2; x; 18 theo thứ tự lập thành một cấp số nhân (với x > 0).",
+options: [
+"6",
+"10",
+"9",
+"36"
+],
+correct: 0,
+explanation: "x² = 2 * 18 = 36 => x = 6 (vì x > 0)."
+},
+{
+text: "Câu 12 (Thông hiểu): Cho cấp số cộng (un) có u5 = 18 và u12 = 32. Tìm công sai d.",
+options: [
+"2",
+"3",
+"4",
+"5"
+],
+correct: 0,
+explanation: "u12 - u5 = 7d => 32 - 18 = 7d => 14 = 7d => d = 2."
+},
+{
+text: "Câu 13 (Thông hiểu): Dãy số (un) với un = (2n + 1) / (n + 2). Khẳng định nào sau đây đúng?",
+options: [
+"Dãy số tăng",
+"Dãy số giảm",
+"Dãy số không tăng không giảm",
+"Dãy số không bị chặn"
+],
+correct: 0,
+explanation: "Xét hiệu un+1 - un > 0 với mọi n, vậy dãy số tăng."
+},
+{
+text: "Câu 14 (Thông hiểu): Cho cấp số nhân có u1 = 3 và u2 = -6. Tổng 5 số hạng đầu tiên là:",
+options: [
+"33",
+"-33",
+"31",
+"-63"
+],
+correct: 0,
+explanation: "q = -2. S5 = 3 * [1 - (-2)^5] / [1 - (-2)] = 3 * 33 / 3 = 33."
+},
+{
+text: "Câu 15 (Thông hiểu): Một rạp hát có 20 hàng ghế. Hàng đầu tiên có 15 ghế, mỗi hàng sau nhiều hơn hàng trước 2 ghế. Tổng số ghế của rạp là:",
+options: [
+"680",
+"700",
+"640",
+"340"
+],
+correct: 0,
+explanation: "S20 với u1 = 15, d = 2. S20 = (20/2) * [215 + 192] = 10 * [30 + 38] = 680."
+},
+{
+text: "Câu 16 (Thông hiểu): Cho cấp số nhân (un) có u3 = 12 và u5 = 48. Công bội q có thể nhận giá trị:",
+options: [
+"±2",
+"4",
+"±4",
+"2"
+],
+correct: 0,
+explanation: "u5 = u3 * q² => 48 = 12 * q² => q² = 4 => q = ±2."
+},
+{
+text: "Câu 17 (Thông hiểu): Tính giới hạn của dãy số un = 1/2 + 1/4 + ... + 1/2^n khi n tiến ra vô cùng.",
+options: [
+"1",
+"2",
+"0,5",
+"0"
+],
+correct: 0,
+explanation: "Đây là tổng cấp số nhân lùi vô hạn với u1 = 1/2, q = 1/2. S = u1 / (1-q) = (1/2) / (1/2) = 1."
+},
+{
+text: "Câu 18 (Thông hiểu): Một công ty trả lương cho kỹ sư theo quý. Quý 1 là 10 triệu đồng, kể từ quý 2 mỗi quý tăng thêm 500 nghìn đồng. Sau 2 năm (8 quý), tổng số tiền lương kỹ sư nhận được là:",
+options: [
+"94 triệu",
+"80 triệu",
+"11,75 triệu",
+"47 triệu"
+],
+correct: 0,
+explanation: "S8 với u1 = 10, d = 0,5. S8 = (8/2) * [210 + 70,5] = 4 * 23,5 = 94 triệu."
+},
+{
+text: "Câu 19 (Thông hiểu): Tìm số hạng đầu u1 của cấp số cộng (un) biết u3 + u5 = 20 và u2 + u8 = 24.",
+options: [
+"3",
+"2",
+"4",
+"1"
+],
+correct: 0,
+explanation: "Giải hệ: 2u1 + 6d = 20 và 2u1 + 8d = 24 => 2d = 4 => d = 2, u1 = 4."
+},
+{
+text: "Câu 20 (Thông hiểu): Số hạng u1 của cấp số nhân (un) biết u1 + u2 + u3 = 13 và u1.u2.u3 = 27 là:",
+options: [
+"1 hoặc 9",
+"3",
+"1",
+"9"
+],
+correct: 0,
+explanation: "u2³ = 27 => u2 = 3. Thay vào tổng: u1 + 3 + 3q = 13 => 3/q + 3q = 10. Giải ra q=3 hoặc q=1/3. u1 tương ứng là 1 hoặc 9."
+},
+{
+text: "Câu 21 (Vận dụng): Cho dãy số (un) thỏa mãn u1 = 2 và un+1 = 3un - 2. Công thức số hạng tổng quát của dãy số là:",
+options: [
+"un = 3^(n-1) + 1",
+"un = 2.3^(n-1)",
+"un = 3^n - 1",
+"un = n² + 1"
+],
+correct: 0,
+explanation: "Đặt vn = un - 1 => vn+1 = 3vn. vn là CSN có v1 = 1, q = 3. vn = 3^(n-1) => un = 3^(n-1) + 1."
+},
+{
+text: "Câu 22 (Vận dụng): Một quả bóng rơi từ độ cao 10m. Mỗi lần chạm đất, nó nảy lên độ cao bằng 3/4 độ cao lần rơi trước đó. Tổng quãng đường quả bóng đi được cho đến khi dừng hẳn là:",
+options: [
+"70 m",
+"40 m",
+"30 m",
+"80 m"
+],
+correct: 0,
+explanation: "S = h + 2(hq + hq² + ...) = 10 + 2 * [ (10*3/4) / (1 - 3/4) ] = 10 + 2 * 30 = 70m."
+},
+{
+text: "Câu 23 (Vận dụng): Một người gửi 100 triệu vào ngân hàng với lãi suất 0,5%/tháng theo hình thức lãi kép. Sau đúng 2 năm (24 tháng), người đó nhận được số tiền cả gốc và lãi gần nhất với số nào?",
+options: [
+"112,7 triệu",
+"112 triệu",
+"100,5 triệu",
+"124 triệu"
+],
+correct: 0,
+explanation: "T = 100 * (1 + 0,005)^24 ≈ 112,715 triệu."
+},
+{
+text: "Câu 24 (Vận dụng): Tìm m để phương trình x³ - 3x² - 9x + m = 0 có 3 nghiệm phân biệt lập thành một cấp số cộng có tổng nghiệm bằng 3.",
+options: [
+"m = 11",
+"m = 1",
+"m = 10",
+"m = -11"
+],
+correct: 0,
+explanation: "Gọi 3 nghiệm là a-d, a, a+d. Tổng nghiệm = 3 => 3a = 3 => a = 1. Thay x = 1 vào PT: 1 - 3 - 9 + m = 0 => m = 11."
+},
+{
+text: "Câu 25 (Vận dụng): Một vi khuẩn sau mỗi giờ sẽ phân chia thành 2 vi khuẩn mới. Nếu ban đầu có 5 vi khuẩn, sau bao nhiêu giờ sẽ có ít nhất 10000 vi khuẩn?",
+options: [
+"11 giờ",
+"10 giờ",
+"12 giờ",
+"9 giờ"
+],
+correct: 0,
+explanation: "un = 5 * 2^n. Cần 5 * 2^n ≥ 10000 => 2^n ≥ 2000. Ta có 2^10 = 1024, 2^11 = 2048. Vậy sau 11 giờ."
+}
+]
+        };
+
+        let currentIdx = 0;
+        let userAnswers = new Array(QUIZ_DATA.questions.length).fill(null);
+        let isSubmitted = false;
+        let secondsLeft = QUIZ_DATA.time * 60;
+        let timerInterval;
+
+        const qText = document.getElementById('q-text');
+        const optionsList = document.getElementById('options-list');
+        const navGrid = document.getElementById('nav-grid');
+        const timerDisplay = document.getElementById('timer');
+
+        function init() {
+            navGrid.innerHTML = '';
+            QUIZ_DATA.questions.forEach((_, i) => {
+                const item = document.createElement('div');
+                item.className = 'nav-item';
+                item.innerText = i + 1;
+                item.id = `nav-${i}`;
+                item.onclick = () => { currentIdx = i; renderQuestion(); };
+                navGrid.appendChild(item);
+            });
+            renderQuestion();
+            startTimer();
+        }
+
+        function renderQuestion() {
+            const data = QUIZ_DATA.questions[currentIdx];
+            document.getElementById('q-current').innerText = currentIdx + 1;
+            qText.innerText = data.text; // Sửa lỗi gọi thuộc tính .q thành .text
+            
+            optionsList.innerHTML = '';
+            data.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                if (userAnswers[currentIdx] === i) div.classList.add('selected');
+                
+                if (isSubmitted) {
+                    div.classList.add('disabled');
+                    if (i === data.correct) div.classList.add('correct');
+                    if (userAnswers[currentIdx] === i && i !== data.correct) div.classList.add('wrong');
+                } else {
+                    div.onclick = () => selectOption(i);
+                }
+
+                div.innerHTML = `<span style="font-weight:bold; margin-right:10px">${String.fromCharCode(65+i)}.</span> <span>${opt}</span>`;
+                optionsList.appendChild(div);
+            });
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${currentIdx}`).classList.add('active');
+
+            document.getElementById('prev-btn').disabled = currentIdx === 0;
+            document.getElementById('next-btn').disabled = currentIdx === QUIZ_DATA.questions.length - 1;
+
+            const expBox = document.getElementById('explanation-box');
+            if (isSubmitted) {
+                expBox.classList.remove('hidden');
+                document.getElementById('explanation-text').innerText = data.explanation; // Sửa lỗi thuộc tính .explain thành .explanation
+            } else {
+                expBox.classList.add('hidden');
+            }
+        }
+
+        function selectOption(idx) {
+            userAnswers[currentIdx] = idx;
+            document.getElementById(`nav-${currentIdx}`).classList.add('done');
+            renderQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (isSubmitted) return;
+                secondsLeft--;
+                const m = Math.floor(secondsLeft / 60);
+                const s = secondsLeft % 60;
+                timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (secondsLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            clearInterval(timerInterval);
+            let score = 0;
+            userAnswers.forEach((ans, i) => {
+                const navItem = document.getElementById(`nav-${i}`);
+                if (ans === QUIZ_DATA.questions[i].correct) {
+                    score++;
+                    navItem.classList.add('correct');
+                } else {
+                    navItem.classList.add('wrong');
+                }
+            });
+
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('score-percent').innerText = Math.round((score/QUIZ_DATA.questions.length)*100) + "%";
+            renderQuestion();
+        }
+
+        document.getElementById('next-btn').onclick = () => { if (currentIdx < QUIZ_DATA.questions.length - 1) { currentIdx++; renderQuestion(); } };
+        document.getElementById('prev-btn').onclick = () => { if (currentIdx > 0) { currentIdx--; renderQuestion(); } };
+        document.getElementById('submit-btn').onclick = () => { if (confirm("Bạn có chắc chắn muốn nộp bài?")) finishQuiz(); };
+
+        init();
+    </script>
+</body>
+</html>

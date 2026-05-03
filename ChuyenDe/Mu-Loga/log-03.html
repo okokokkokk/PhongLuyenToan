@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng luyện đề trắc nghiệm</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="website icon" type="jpg" href="../../logo.jpg">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #38bdf8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 10px; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timer-container {
+            background: var(--card-bg);
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .q-badge {
+            background: rgba(248, 94, 56, 0.1);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        #q-text { margin: 15px 0; font-size: 1.15rem; font-weight: 500; }
+
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .option {
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .option:hover:not(.disabled) { background: rgba(0, 94, 255, 0.07); border-color: var(--text-secondary); }
+        .option.selected { border-color: var(--primary); background: rgba(0, 157, 255, 0.1); }
+        .option.correct { border-color: var(--success); color: var(--success); background: rgba(34, 197, 94, 0.1); }
+        .option.wrong { border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.1); }
+        .option.disabled { cursor: default; }
+
+        .controls { display: flex; justify-content: space-between; margin-top: 20px; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: #000; width: 100%; justify-content: center; margin-top: 15px; }
+        .btn-secondary { background: var(--border); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; justify-content: center; margin-top: 10px; }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+        }
+
+        .nav-item {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .nav-item.active { border-color: var(--primary); color: var(--primary); outline: 2px solid rgba(56,189,248,0.2); }
+        .nav-item.done { background: #334155; color: #fff; }
+        .nav-item.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .nav-item.wrong { background: var(--error); color: #fff; border-color: var(--error); }
+
+        .explanation-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(56, 189, 248, 0.05);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+        }
+
+        .hidden { display: none; }
+        
+        .score-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        #score-percent { text-align: center; color: var(--text-secondary); font-weight: bold; }
+        /* Màu xanh dương đậm khi chọn */
+        .option.selected {
+            background-color: #2aa2d6 !important; 
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important; /* Chữ trắng cho nổi bật */
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- RESPONSIVE CHO ĐIỆN THOẠI --- */
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .container { padding: 5px; }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .main-layout {
+                grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+            }
+
+            .quiz-section { order: 1; }
+            .sidebar { order: 2; }
+
+            .timer-container { font-size: 1.2rem; width: 100%; justify-content: center; display: flex; }
+            
+            .q-text { font-size: 1.05rem; }
+            .option { padding: 12px; font-size: 0.95rem; }
+            
+            .controls button {
+                flex: 1;
+                padding: 15px 10px; /* Tăng diện tích chạm */
+                font-size: 0.9rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: repeat(5, 1fr); /* Hiển thị 5 ô trên 1 hàng cho gọn */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nút quay lại -->
+    <div style="padding: 10px; max-width: 1100px; margin: 0 auto;">
+        <button onclick="window.history.back()" class="btn btn-secondary" style="width: auto; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </button>
+    </div>
+    <div class="container">
+        <header>
+            <div class="header-info">
+                <h1 id="quiz-title">Hàm số mũ và logarit - Mã đề 03</h1>
+                <p id="quiz-subtitle">Thời gian: <span id="limit-time">45</span> phút</p>
+            </div>
+            <div class="timer-container">
+                <i class="fas fa-clock"></i>
+                <span id="timer">45:00</span>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="quiz-section">
+                <div id="question-card" class="card">
+                    <div class="card-header">
+                        <span class="q-badge">Câu <span id="q-current">1</span>/25</span>
+                    </div>
+                    <h2 id="q-text">Đang tải...</h2>
+                    <div id="options-list" class="options-list"></div>
+                    <div id="explanation-box" class="explanation-box hidden">
+                        <strong><i class="fas fa-lightbulb"></i> Giải thích:</strong>
+                        <p id="explanation-text" style="margin-top:5px; color: var(--text-secondary);"></p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="prev-btn" class="btn btn-secondary"><i class="fas fa-chevron-left"></i> Câu trước</button>
+                    <button id="next-btn" class="btn btn-secondary">Câu sau <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 10px;">Tiến trình làm bài</h3>
+                    <div id="nav-grid" class="nav-grid"></div>
+                    <button id="submit-btn" class="btn btn-primary">NỘP BÀI</button>
+                </div>
+
+                <div id="result-card" class="card hidden">
+                    <h3 style="text-align: center;">KẾT QUẢ</h3>
+                    <div class="score-display">
+                        <span id="score-val">0</span>/<span id="total-val">25</span>
+                    </div>
+                    <p id="score-percent">0%</p>
+                    <button onclick="location.reload()" class="btn btn-outline">Làm lại bài thi</button>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const QUIZ_DATA = {
+            title: "Đề Ôn Tập Mũ và Logarit - Mã đề 03",
+            time: 45,
+            questions: [
+                {
+                text: "Câu 1 (Nhận biết - Tính toán): Với a là số thực dương tùy ý, biểu thức P = a^(1/3) . √a viết dưới dạng lũy thừa là:",
+                options: [
+                "a^(5/6)",
+                "a^(2/3)",
+                "a^(1/6)",
+                "a^(4/3)"
+                ],
+                correct: 0,
+                explanation: "P = a^(1/3) . a^(1/2) = a^(1/3 + 1/2) = a^(5/6)."
+                },
+                {
+                text: "Câu 2 (Nhận biết - Tính toán): Cho a > 0, a ≠ 1. Giá trị của biểu thức P = loga(√a) là:",
+                options: [
+                "1/2",
+                "2",
+                "1",
+                "0"
+                ],
+                correct: 0,
+                explanation: "P = loga(a^(1/2)) = 1/2."
+                },
+                {
+                text: "Câu 3 (Nhận biết - Tính toán): Tập xác định của hàm số y = 3ˣ là:",
+                options: [
+                "R",
+                "(0; +∞)",
+                "[0; +∞)",
+                "R \ {0}"
+                ],
+                correct: 0,
+                explanation: "Hàm số mũ y = aˣ luôn xác định trên R."
+                },
+                {
+                text: "Câu 4 (Nhận biết - Tính toán): Nghiệm của phương trình log2(x) = 3 là:",
+                options: [
+                "x = 8",
+                "x = 9",
+                "x = 6",
+                "x = 5"
+                ],
+                correct: 0,
+                explanation: "x = 2³ = 8."
+                },
+                {
+                text: "Câu 5 (Nhận biết - Tính toán): Đạo hàm của hàm số y = log(x) (với x > 0) là:",
+                options: [
+                "1 / (x.ln 10)",
+                "1/x",
+                "ln 10 / x",
+                "1 / (x.ln e)"
+                ],
+                correct: 0,
+                explanation: "Công thức đạo hàm loga(x) là 1/(x.ln a). Với cơ số 10, kết quả là 1/(x.ln 10)."
+                },
+                {
+                text: "Câu 6 (Thông hiểu - Tính toán): Cho log2(5) = a. Tính log4(125) theo a.",
+                options: [
+                "3a/2",
+                "2a/3",
+                "3a",
+                "a/3"
+                ],
+                correct: 0,
+                explanation: "log4(125) = log(2²)(5³) = (3/2).log2(5) = 3a/2."
+                },
+                {
+                text: "Câu 7 (Thông hiểu - Tính toán): Rút gọn biểu thức P = log3(a) + log3(9/a) với a > 0.",
+                options: [
+                "2",
+                "9",
+                "log3(a)",
+                "3"
+                ],
+                correct: 0,
+                explanation: "P = log3(a . 9/a) = log3(9) = 2."
+                },
+                {
+                text: "Câu 8 (Thông hiểu - Tính toán): Giải bất phương trình (1/3)ˣ > 9.",
+                options: [
+                "x < -2",
+                "x > -2",
+                "x < 2",
+                "x > 2"
+                ],
+                correct: 0,
+                explanation: "(3⁻¹)ˣ > 3² ⇔ -x > 2 ⇔ x < -2."
+                },
+                {
+                text: "Câu 9 (Thông hiểu - Tính toán): Tìm đạo hàm của hàm số y = e^(x² + 2x).",
+                options: [
+                "(2x + 2).e^(x² + 2x)",
+                "e^(x² + 2x)",
+                "(x² + 2x).e^(x² + 2x)",
+                "2.e^(x² + 2x)"
+                ],
+                correct: 0,
+                explanation: "y' = (x² + 2x)'.e^(x² + 2x) = (2x + 2).e^(x² + 2x)."
+                },
+                {
+                text: "Câu 10 (Thông hiểu - Tính toán): Tổng các nghiệm của phương trình 9ˣ - 4.3ˣ + 3 = 0 là:",
+                options: [
+                "1",
+                "4",
+                "3",
+                "0"
+                ],
+                correct: 0,
+                explanation: "Đặt t = 3ˣ > 0. PT ⇔ t² - 4t + 3 = 0 ⇔ t = 1 hoặc t = 3. Suy ra x = 0 hoặc x = 1. Tổng = 1."
+                },
+                {
+                text: "Câu 11 (Thông hiểu - Thực tế): Một loại vi khuẩn sau mỗi giờ sẽ tăng số lượng lên gấp đôi. Nếu ban đầu có 100 con, sau bao lâu sẽ có 3200 con?",
+                options: [
+                "5 giờ",
+                "32 giờ",
+                "6 giờ",
+                "4 giờ"
+                ],
+                correct: 0,
+                explanation: "100 . 2ⁿ = 3200 ⇔ 2ⁿ = 32 ⇔ n = 5."
+                },
+                {
+                text: "Câu 12 (Thông hiểu - Thực tế): Cường độ âm L (dB) được tính bởi L = 10.log(I/I₀). Tiếng thì thầm có cường độ I₁ = 10⁻¹⁰ W/m², tiếng ồn đường phố có I₂ = 10⁻⁵ W/m². Biết I₀ = 10⁻¹² W/m². Tiếng ồn đường phố lớn hơn tiếng thì thầm bao nhiêu dB?",
+                options: [
+                "50 dB",
+                "10 dB",
+                "5 dB",
+                "100 dB"
+                ],
+                correct: 0,
+                explanation: "L2 - L1 = 10.log(I2/I₀) - 10.log(I1/I₀) = 10.log(I2/I1) = 10.log(10⁻⁵/10⁻¹⁰) = 10.log(10⁵) = 50 dB."
+                },
+                {
+                text: "Câu 13 (Thông hiểu - Thực tế): Độ pH của nước chanh là 2,4. Tính nồng độ ion [H⁺] của nước chanh (pH = -log[H⁺]).",
+                options: [
+                "10⁻²,⁴ mol/L",
+                "10²,⁴ mol/L",
+                "2,4 mol/L",
+                "log(2,4) mol/L"
+                ],
+                correct: 0,
+                explanation: "-log[H⁺] = 2,4 ⇔ log[H⁺] = -2,4 ⇔ [H⁺] = 10⁻²,⁴."
+                },
+                {
+                text: "Câu 14 (Thông hiểu - Thực tế): Sự tăng trưởng dân số của một thành phố được tính theo công thức S = A.(1 + r)ⁿ. Nếu dân số hiện tại là 1 triệu người, tỷ lệ tăng trưởng là 2%/năm thì sau 10 năm dân số là bao nhiêu?",
+                options: [
+                "1,219 triệu người",
+                "1,200 triệu người",
+                "1,020 triệu người",
+                "1,500 triệu người"
+                ],
+                correct: 0,
+                explanation: "S = 1.(1 + 0,02)¹⁰ ≈ 1,2189... triệu người."
+                },
+                {
+                text: "Câu 15 (Thông hiểu - Thực tế): Áp suất khí quyển P (tính bằng mmHg) tại độ cao h (tính bằng km) được cho bởi P = 760.e^(-0,14h). Tại đỉnh Fansipan (cao khoảng 3,1 km), áp suất khí quyển là bao nhiêu?",
+                options: [
+                "492,8 mmHg",
+                "500,2 mmHg",
+                "760 mmHg",
+                "310 mmHg"
+                ],
+                correct: 0,
+                explanation: "P = 760.e^(-0,14 * 3,1) ≈ 492,82 mmHg."
+                },
+                {
+                text: "Câu 16 (Vận dụng - Thực tế): Bạn Nam gửi tiết kiệm 50 triệu đồng vào ngân hàng với lãi suất 0,5% mỗi tháng theo hình thức lãi kép. Hỏi sau ít nhất bao nhiêu tháng bạn Nam nhận được số tiền cả gốc lẫn lãi nhiều hơn 60 triệu đồng?",
+                options: [
+                "37 tháng",
+                "36 tháng",
+                "20 tháng",
+                "40 tháng"
+                ],
+                correct: 0,
+                explanation: "50.(1 + 0,005)ⁿ > 60 ⇔ 1,005ⁿ > 1,2 ⇔ n > log1,005(1,2) ≈ 36,55. Vậy cần 37 tháng."
+                },
+                {
+                text: "Câu 17 (Vận dụng - Thực tế): Một người vay ngân hàng 100 triệu đồng, lãi suất 1%/tháng. Mỗi tháng người đó trả đều đặn một số tiền m đồng. Sau đúng 2 năm thì hết nợ. Số tiền m hàng tháng người đó phải trả là bao nhiêu?",
+                options: [
+                "4,707 triệu đồng",
+                "4,166 triệu đồng",
+                "5,231 triệu đồng",
+                "4,500 triệu đồng"
+                ],
+                correct: 0,
+                explanation: "Công thức trả góp: m = (A.r.(1+r)ⁿ) / ((1+r)ⁿ - 1). Với A=100, r=0,01, n=24. m ≈ 4,707 triệu."
+                },
+                {
+                text: "Câu 18 (Vận dụng - Thực tế): Trong âm nhạc, quãng tám là khoảng cách giữa hai âm có tần số f1 và f2 sao cho f2 = 2.f1. Khoảng cách n nửa cung giữa hai âm được tính bởi f2 = f1 . 2^(n/12). Nếu âm La trung có tần số 440 Hz, thì nốt nhạc cao hơn nó 7 nửa cung có tần số là bao nhiêu?",
+                options: [
+                "659,25 Hz",
+                "880 Hz",
+                "500 Hz",
+                "600,5 Hz"
+                ],
+                correct: 0,
+                explanation: "f = 440 . 2^(7/12) ≈ 659,25 Hz."
+                },
+                {
+                text: "Câu 19 (Vận dụng - Thực tế): Độ sáng của một ngôi sao (cấp sao m) được tính bởi m = -2,5.log(L/L₀). Nếu ngôi sao A sáng gấp 100 lần ngôi sao B, thì cấp sao của chúng chênh lệch bao nhiêu đơn vị?",
+                options: [
+                "5 đơn vị",
+                "2,5 đơn vị",
+                "100 đơn vị",
+                "2 đơn vị"
+                ],
+                correct: 0,
+                explanation: "mB - mA = -2,5.log(LB/L₀) - (-2,5.log(LA/L₀)) = 2,5.log(LA/LB) = 2,5.log(100) = 5."
+                },
+                {
+                text: "Câu 20 (Vận dụng - Thực tế): Một ly cà phê nóng có nhiệt độ 80°C được đặt trong phòng có nhiệt độ 20°C. Sau t phút, nhiệt độ ly cà phê là T = 20 + 60.e^(-0,05t). Sau bao lâu cà phê còn 40°C?",
+                options: [
+                "22 phút",
+                "15 phút",
+                "30 phút",
+                "10 phút"
+                ],
+                correct: 0,
+                explanation: "40 = 20 + 60.e^(-0,05t) ⇔ 20 = 60.e^(-0,05t) ⇔ e^(-0,05t) = 1/3 ⇔ -0,05t = ln(1/3) ⇔ t ≈ 21,97."
+                },
+                {
+                text: "Câu 21 (Vận dụng - Thực tế): Năng lượng giải tỏa từ một trận động đất (E, đơn vị Joule) liên hệ với độ Richter M qua công thức log(E) = 4,4 + 1,5M. Trận động đất 7 độ Richter có năng lượng gấp bao nhiêu lần trận 5 độ Richter?",
+                options: [
+                "1000 lần",
+                "100 lần",
+                "3 lần",
+                "1,4 lần"
+                ],
+                correct: 0,
+                explanation: "log(E1) - log(E2) = 1,5(M1 - M2) = 1,5(2) = 3. Suy ra E1/E2 = 10³ = 1000."
+                },
+                {
+                text: "Câu 22 (Vận dụng - Thực tế): Tốc độ truyền tin trên mạng xã hội tuân theo hàm số P(t) = 1 / (1 + 10.e^(-0,5t)), với P là tỷ lệ dân số biết tin sau t giờ. Cần bao lâu để 50% dân số biết tin?",
+                options: [
+                "4,6 giờ",
+                "2,3 giờ",
+                "5 giờ",
+                "10 giờ"
+                ],
+                correct: 0,
+                explanation: "0,5 = 1 / (1 + 10.e^(-0,5t)) ⇔ 1 + 10.e^(-0,5t) = 2 ⇔ 10.e^(-0,5t) = 1 ⇔ e^(-0,5t) = 0,1 ⇔ t = ln(10) / 0,5 ≈ 4,6."
+                },
+                {
+                text: "Câu 23 (Vận dụng - Thực tế): Độ giảm cường độ sáng khi đi qua một lớp kính dày x (cm) là I = I₀.e^(-kx). Nếu kính giảm 20% cường độ sáng khi dày 1cm, thì dày bao nhiêu cm sẽ giảm 50%?",
+                options: [
+                "3,1 cm",
+                "2,5 cm",
+                "2 cm",
+                "4 cm"
+                ],
+                correct: 0,
+                explanation: "1cm giảm 20% => còn 80%: 0,8 = e^(-k). Giảm 50% => còn 50%: 0,5 = (e^(-k))ˣ = 0,8ˣ ⇔ x = log0,8(0,5) ≈ 3,1."
+                },
+                {
+                text: "Câu 24 (Vận dụng - Thực tế): Một chiếc xe hơi mất giá theo công thức V(t) = V₀.e^(-0,15t). Sau bao nhiêu năm giá trị xe chỉ còn bằng 1/3 giá ban đầu?",
+                options: [
+                "7,3 năm",
+                "10 năm",
+                "5 năm",
+                "6,6 năm"
+                ],
+                correct: 0,
+                explanation: "1/3 = e^(-0,15t) ⇔ -0,15t = ln(1/3) ⇔ t = ln(3) / 0,15 ≈ 7,32."
+                },
+                {
+                text: "Câu 25 (Vận dụng - Thực tế): Một bể bơi được khử trùng bằng Clo. Lượng Clo giảm dần theo quy luật C(t) = C₀.aᵗ. Nếu sau 1 giờ lượng Clo còn 90%, hỏi sau bao lâu lượng Clo còn 50% so với ban đầu?",
+                options: [
+                "6,6 giờ",
+                "5 giờ",
+                "7,2 giờ",
+                "8 giờ"
+                ],
+                correct: 0,
+                explanation: "C(1) = 0,9C₀ => a = 0,9. C(t) = 0,5C₀ ⇔ 0,9ᵗ = 0,5 ⇔ t = log0,9(0,5) ≈ 6,58."
+                }
+                ]
+        };
+
+        let currentIdx = 0;
+        let userAnswers = new Array(QUIZ_DATA.questions.length).fill(null);
+        let isSubmitted = false;
+        let secondsLeft = QUIZ_DATA.time * 60;
+        let timerInterval;
+
+        const qText = document.getElementById('q-text');
+        const optionsList = document.getElementById('options-list');
+        const navGrid = document.getElementById('nav-grid');
+        const timerDisplay = document.getElementById('timer');
+
+        function init() {
+            navGrid.innerHTML = '';
+            QUIZ_DATA.questions.forEach((_, i) => {
+                const item = document.createElement('div');
+                item.className = 'nav-item';
+                item.innerText = i + 1;
+                item.id = `nav-${i}`;
+                item.onclick = () => { currentIdx = i; renderQuestion(); };
+                navGrid.appendChild(item);
+            });
+            renderQuestion();
+            startTimer();
+        }
+
+        function renderQuestion() {
+            const data = QUIZ_DATA.questions[currentIdx];
+            document.getElementById('q-current').innerText = currentIdx + 1;
+            qText.innerText = data.text; // Sửa lỗi gọi thuộc tính .q thành .text
+            
+            optionsList.innerHTML = '';
+            data.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                if (userAnswers[currentIdx] === i) div.classList.add('selected');
+                
+                if (isSubmitted) {
+                    div.classList.add('disabled');
+                    if (i === data.correct) div.classList.add('correct');
+                    if (userAnswers[currentIdx] === i && i !== data.correct) div.classList.add('wrong');
+                } else {
+                    div.onclick = () => selectOption(i);
+                }
+
+                div.innerHTML = `<span style="font-weight:bold; margin-right:10px">${String.fromCharCode(65+i)}.</span> <span>${opt}</span>`;
+                optionsList.appendChild(div);
+            });
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${currentIdx}`).classList.add('active');
+
+            document.getElementById('prev-btn').disabled = currentIdx === 0;
+            document.getElementById('next-btn').disabled = currentIdx === QUIZ_DATA.questions.length - 1;
+
+            const expBox = document.getElementById('explanation-box');
+            if (isSubmitted) {
+                expBox.classList.remove('hidden');
+                document.getElementById('explanation-text').innerText = data.explanation; // Sửa lỗi thuộc tính .explain thành .explanation
+            } else {
+                expBox.classList.add('hidden');
+            }
+        }
+
+        function selectOption(idx) {
+            userAnswers[currentIdx] = idx;
+            document.getElementById(`nav-${currentIdx}`).classList.add('done');
+            renderQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (isSubmitted) return;
+                secondsLeft--;
+                const m = Math.floor(secondsLeft / 60);
+                const s = secondsLeft % 60;
+                timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (secondsLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            clearInterval(timerInterval);
+            let score = 0;
+            userAnswers.forEach((ans, i) => {
+                const navItem = document.getElementById(`nav-${i}`);
+                if (ans === QUIZ_DATA.questions[i].correct) {
+                    score++;
+                    navItem.classList.add('correct');
+                } else {
+                    navItem.classList.add('wrong');
+                }
+            });
+
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('score-percent').innerText = Math.round((score/QUIZ_DATA.questions.length)*100) + "%";
+            renderQuestion();
+        }
+
+        document.getElementById('next-btn').onclick = () => { if (currentIdx < QUIZ_DATA.questions.length - 1) { currentIdx++; renderQuestion(); } };
+        document.getElementById('prev-btn').onclick = () => { if (currentIdx > 0) { currentIdx--; renderQuestion(); } };
+        document.getElementById('submit-btn').onclick = () => { if (confirm("Bạn có chắc chắn muốn nộp bài?")) finishQuiz(); };
+
+        init();
+    </script>
+</body>
+</html>

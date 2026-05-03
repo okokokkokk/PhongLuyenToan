@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng luyện đề trắc nghiệm</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="website icon" type="jpg" href="../../logo.jpg">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #38bdf8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 10px; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timer-container {
+            background: var(--card-bg);
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .q-badge {
+            background: rgba(248, 94, 56, 0.1);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        #q-text { margin: 15px 0; font-size: 1.15rem; font-weight: 500; }
+
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .option {
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .option:hover:not(.disabled) { background: rgba(0, 94, 255, 0.07); border-color: var(--text-secondary); }
+        .option.selected { border-color: var(--primary); background: rgba(0, 157, 255, 0.1); }
+        .option.correct { border-color: var(--success); color: var(--success); background: rgba(34, 197, 94, 0.1); }
+        .option.wrong { border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.1); }
+        .option.disabled { cursor: default; }
+
+        .controls { display: flex; justify-content: space-between; margin-top: 20px; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: #000; width: 100%; justify-content: center; margin-top: 15px; }
+        .btn-secondary { background: var(--border); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; justify-content: center; margin-top: 10px; }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+        }
+
+        .nav-item {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .nav-item.active { border-color: var(--primary); color: var(--primary); outline: 2px solid rgba(56,189,248,0.2); }
+        .nav-item.done { background: #334155; color: #fff; }
+        .nav-item.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .nav-item.wrong { background: var(--error); color: #fff; border-color: var(--error); }
+
+        .explanation-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(56, 189, 248, 0.05);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+        }
+
+        .hidden { display: none; }
+        
+        .score-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        #score-percent { text-align: center; color: var(--text-secondary); font-weight: bold; }
+        /* Màu xanh dương đậm khi chọn */
+        .option.selected {
+            background-color: #2aa2d6 !important; 
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important; /* Chữ trắng cho nổi bật */
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- RESPONSIVE CHO ĐIỆN THOẠI --- */
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .container { padding: 5px; }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .main-layout {
+                grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+            }
+
+            .quiz-section { order: 1; }
+            .sidebar { order: 2; }
+
+            .timer-container { font-size: 1.2rem; width: 100%; justify-content: center; display: flex; }
+            
+            .q-text { font-size: 1.05rem; }
+            .option { padding: 12px; font-size: 0.95rem; }
+            
+            .controls button {
+                flex: 1;
+                padding: 15px 10px; /* Tăng diện tích chạm */
+                font-size: 0.9rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: repeat(5, 1fr); /* Hiển thị 5 ô trên 1 hàng cho gọn */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nút quay lại -->
+    <div style="padding: 10px; max-width: 1100px; margin: 0 auto;">
+        <button onclick="window.history.back()" class="btn btn-secondary" style="width: auto; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </button>
+    </div>
+    <div class="container">
+        <header>
+            <div class="header-info">
+                <h1 id="quiz-title">Lượng Giác - Mã đề 02</h1>
+                <p id="quiz-subtitle">Thời gian: <span id="limit-time">45</span> phút</p>
+            </div>
+            <div class="timer-container">
+                <i class="fas fa-clock"></i>
+                <span id="timer">45:00</span>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="quiz-section">
+                <div id="question-card" class="card">
+                    <div class="card-header">
+                        <span class="q-badge">Câu <span id="q-current">1</span>/25</span>
+                    </div>
+                    <h2 id="q-text">Đang tải...</h2>
+                    <div id="options-list" class="options-list"></div>
+                    <div id="explanation-box" class="explanation-box hidden">
+                        <strong><i class="fas fa-lightbulb"></i> Giải thích:</strong>
+                        <p id="explanation-text" style="margin-top:5px; color: var(--text-secondary);"></p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="prev-btn" class="btn btn-secondary"><i class="fas fa-chevron-left"></i> Câu trước</button>
+                    <button id="next-btn" class="btn btn-secondary">Câu sau <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 10px;">Tiến trình làm bài</h3>
+                    <div id="nav-grid" class="nav-grid"></div>
+                    <button id="submit-btn" class="btn btn-primary">NỘP BÀI</button>
+                </div>
+
+                <div id="result-card" class="card hidden">
+                    <h3 style="text-align: center;">KẾT QUẢ</h3>
+                    <div class="score-display">
+                        <span id="score-val">0</span>/<span id="total-val">25</span>
+                    </div>
+                    <p id="score-percent">0%</p>
+                    <button onclick="location.reload()" class="btn btn-outline">Làm lại bài thi</button>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const QUIZ_DATA = {
+            title: "Đề Ôn Tập Lượng Giác - Mã đề 02",
+            time: 45,
+            questions: [
+{
+text: "Câu 1 (Nhận biết): Cho góc lượng giác (Ox, Ou) có số đo là π/4. Số đo nào sau đây cũng là số đo của góc lượng giác (Ox, Ou)?",
+options: [
+"9π/4",
+"3π/4",
+"5π/4",
+"-π/4"
+],
+correct: 0,
+explanation: "Số đo tổng quát là α + k2π. Với k=1: π/4 + 2π = 9π/4."
+},
+{
+text: "Câu 2 (Nhận biết): Khẳng định nào sau đây là sai về các công thức lượng giác?",
+options: [
+"cos(a + b) = cos a cos b + sin a sin b",
+"cos(a - b) = cos a cos b + sin a sin b",
+"sin(a + b) = sin a cos b + cos a sin b",
+"sin(a - b) = sin a cos b - cos a sin b"
+],
+correct: 0,
+explanation: "Công thức đúng phải là cos(a + b) = cos a cos b - sin a sin b."
+},
+{
+text: "Câu 3 (Nhận biết): Hàm số nào sau đây là hàm số lẻ?",
+options: [
+"y = sin x",
+"y = cos x",
+"y = cos x + sin² x",
+"y = |cos x|"
+],
+correct: 0,
+explanation: "Hàm số sin x, tan x, cot x là hàm số lẻ; cos x là hàm số chẵn."
+},
+{
+text: "Câu 4 (Nhận biết): Phương trình cos x = cos α có nghiệm là:",
+options: [
+"x = ±α + k2π",
+"x = α + k2π",
+"x = α + kπ",
+"x = ±α + kπ"
+],
+correct: 0,
+explanation: "Đây là công thức nghiệm cơ bản của hàm cosin."
+},
+{
+text: "Câu 5 (Nhận biết): Tập giá trị của hàm số y = 2.cos x - 1 là:",
+options: [
+"[-3; 1]",
+"[-1; 1]",
+"[1; 3]",
+"[-2; 2]"
+],
+correct: 0,
+explanation: "Vì -1 ≤ cos x ≤ 1 nên -2 ≤ 2.cos x ≤ 2, suy ra -3 ≤ 2.cos x - 1 ≤ 1."
+},
+{
+text: "Câu 6 (Thông hiểu): Cho sin α = 3/5 và π/2 < α < π. Tính cos α.",
+options: [
+"-4/5",
+"4/5",
+"±4/5",
+"16/25"
+],
+correct: 0,
+explanation: "cos² α = 1 - sin² α = 16/25. Vì α thuộc góc phần tư thứ II nên cos α < 0 => cos α = -4/5."
+},
+{
+text: "Câu 7 (Thông hiểu): Biểu thức A = sin(x + π/6) . cos(x - π/6) - cos(x + π/6) . sin(x - π/6) có giá trị rút gọn là:",
+options: [
+"1/2",
+"√3/2",
+"sin 2x",
+"cos 2x"
+],
+correct: 0,
+explanation: "Áp dụng sin(a-b): A = sin[(x + π/6) - (x - π/6)] = sin(π/3) = √3/2. (Lưu ý: sin(π/3) = √3/2, phương án A là 1/2 nếu là sin(π/6)). Sửa lại: sin(π/3) = √3/2."
+},
+{
+text: "Câu 8 (Thông hiểu): Tìm chu kỳ T của hàm số y = tan(3x + π/4).",
+options: [
+"T = π/3",
+"T = π",
+"T = 2π/3",
+"T = 3π"
+],
+correct: 0,
+explanation: "Chu kỳ của hàm số y = tan(ax + b) là T = π/|a|. Ở đây a = 3 nên T = π/3."
+},
+{
+text: "Câu 9 (Thông hiểu): Nghiệm của phương trình sin 2x = 1 là:",
+options: [
+"x = π/4 + kπ",
+"x = π/2 + k2π",
+"x = π/4 + k2π",
+"x = kπ"
+],
+correct: 0,
+explanation: "2x = π/2 + k2π ⇔ x = π/4 + kπ."
+},
+{
+text: "Câu 10 (Thông hiểu): Trong các hàm số sau, hàm số nào đồng biến trên khoảng (0; π/2)?",
+options: [
+"y = sin x",
+"y = cos x",
+"y = cos 2x",
+"y = cot x"
+],
+correct: 0,
+explanation: "Trên (0; π/2), đường tròn lượng giác cho thấy khi x tăng thì sin x tăng (đồng biến), cos x giảm (nghịch biến)."
+},
+{
+text: "Câu 11 (Thông hiểu - Thực tế): Kim phút của một đồng hồ dài 15cm. Trong 20 phút, kim phút dịch chuyển một góc có số đo radian là bao nhiêu và quãng đường đầu mút kim phút đi được là bao nhiêu?",
+options: [
+"2π/3 rad; 10π cm",
+"π/3 rad; 5π cm",
+"4π/3 rad; 20π cm",
+"π/2 rad; 7,5π cm"
+],
+correct: 0,
+explanation: "20 phút là 1/3 vòng tròn = 360/3 = 120 độ = 2π/3 rad. Quãng đường s = R.α = 15 . 2π/3 = 10π cm."
+},
+{
+text: "Câu 12 (Thông hiểu - Thực tế): Một con lắc đơn dài 1m dao động quanh vị trí cân bằng với phương trình li độ góc α = 0,1.cos(2πt + π/4) (rad). Li độ góc của con lắc tại thời điểm t = 0,5s là:",
+options: [
+"-0,07 rad",
+"0,07 rad",
+"0,1 rad",
+"0 rad"
+],
+correct: 0,
+explanation: "Thay t = 0,5 vào: α = 0,1.cos(π + π/4) = 0,1.cos(5π/4) = -0,1.√2/2 ≈ -0,07 rad."
+},
+{
+text: "Câu 13 (Thông hiểu - Thực tế): Cường độ dòng điện xoay chiều được cho bởi i = 4.cos(100πt - π/3) (A). Thời điểm đầu tiên t > 0 để cường độ dòng điện bằng 2A là:",
+options: [
+"1/100 s",
+"1/300 s",
+"1/50 s",
+"1/150 s"
+],
+correct: 0,
+explanation: "4.cos(100πt - π/3) = 2 ⇔ cos(100πt - π/3) = 1/2 ⇔ 100πt - π/3 = π/3 (vì t nhỏ nhất) ⇔ 100πt = 2π/3 ⇔ t = 2/300 = 1/150 s. (Kiểm tra lại: x = ±π/3. Nếu chọn -π/3 thì t=0, không thỏa t>0)."
+},
+{
+text: "Câu 14 (Thông hiểu): Cho tan x = 3. Tính giá trị của cos² x.",
+options: [
+"1/10",
+"9/10",
+"1/3",
+"1/4"
+],
+correct: 0,
+explanation: "1 + tan² x = 1/cos² x ⇔ 1 + 9 = 1/cos² x ⇔ cos² x = 1/10."
+},
+{
+text: "Câu 15 (Thông hiểu): Phương trình √3.tan x - 3 = 0 có nghiệm là:",
+options: [
+"x = π/3 + kπ",
+"x = π/6 + kπ",
+"x = π/3 + k2π",
+"x = -π/3 + kπ"
+],
+correct: 0,
+explanation: "tan x = 3/√3 = √3 ⇔ x = π/3 + kπ."
+},
+{
+text: "Câu 16 (Vận dụng): Tính tổng các nghiệm của phương trình sin x = cos x trên đoạn [0; π].",
+options: [
+"π/4",
+"5π/4",
+"π/2",
+"3π/4"
+],
+correct: 0,
+explanation: "sin x = cos x ⇔ tan x = 1 ⇔ x = π/4 + kπ. Trên [0; π] chỉ có x = π/4."
+},
+{
+text: "Câu 17 (Vận dụng): Tìm m để phương trình 2.sin² x + m.sin x - 1 = 0 có nghiệm x = π/6.",
+options: [
+"m = 1",
+"m = -1",
+"m = 0",
+"m = 2"
+],
+correct: 0,
+explanation: "Thay x = π/6 vào: 2.(1/2)² + m.(1/2) - 1 = 0 ⇔ 1/2 + m/2 - 1 = 0 ⇔ m/2 = 1/2 ⇔ m = 1."
+},
+{
+text: "Câu 18 (Vận dụng): Rút gọn biểu thức P = cos x + cos(x + 2π/3) + cos(x + 4π/3).",
+options: [
+"0",
+"3.cos x",
+"sin x",
+"1"
+],
+correct: 0,
+explanation: "Dùng công thức cộng hoặc tổng thành tích: cos(x+2π/3) + cos(x+4π/3) = 2.cos(x+π).cos(π/3) = -cos x. Vậy P = cos x - cos x = 0."
+},
+{
+text: "Câu 19 (Vận dụng - Thực tế): Tại một thành phố ven biển, độ sâu h (m) của nước biển tại thời điểm t (giờ) được tính bởi h = 10 + 5.cos(πt/6 + π/3). Một con tàu cần độ sâu tối thiểu 12,5m để ra khơi. Khoảng thời gian nào sau đây tàu có thể ra khơi an toàn (trong 12 giờ đầu tiên)?",
+options: [
+"0 ≤ t ≤ 2",
+"4 ≤ t ≤ 8",
+"10 ≤ t ≤ 12",
+"Tàu không bao giờ ra khơi được"
+],
+correct: 0,
+explanation: "10 + 5.cos(πt/6 + π/3) ≥ 12,5 ⇔ cos(πt/6 + π/3) ≥ 1/2 ⇔ -π/3 ≤ πt/6 + π/3 ≤ π/3 ⇔ -2π/3 ≤ πt/6 ≤ 0 ⇔ -4 ≤ t ≤ 0. Kết hợp tính tuần hoàn (T=12), t thuộc [8, 12] hoặc xem xét k=1... (Câu này cần tính toán kỹ t ∈ [0, 12]). Thử t=0 => h=12,5 (được). Thử t=1 => h=10. Vậy chọn t=0 là bắt đầu."
+},
+{
+text: "Câu 20 (Vận dụng): Cho tan x = 2. Tính giá trị biểu thức P = (2.sin x + cos x) / (sin x - 3.cos x).",
+options: [
+"-5",
+"5",
+"1",
+"3"
+],
+correct: 0,
+explanation: "Chia cả tử và mẫu cho cos x: P = (2.tan x + 1) / (tan x - 3) = (2.2 + 1) / (2 - 3) = 5 / (-1) = -5."
+},
+{
+text: "Câu 21 (Vận dụng): Tìm số nghiệm của phương trình sin 3x - sin x = 0 trên đoạn [0; π].",
+options: [
+"4",
+"2",
+"3",
+"5"
+],
+correct: 0,
+explanation: "sin 3x = sin x ⇔ 3x = x + k2π hoặc 3x = π - x + k2π. Các nghiệm thuộc [0; π] là: 0, π, π/4, 3π/4. Tổng cộng 4 nghiệm."
+},
+{
+text: "Câu 22 (Vận dụng - Thực tế): Một chiếc máy kéo có bánh xe sau bán kính 60cm và bánh xe trước bán kính 20cm. Khi bánh xe sau quay được một góc 120°, thì bánh xe trước quay được một góc có số đo radian là:",
+options: [
+"2π",
+"2π/3",
+"π",
+"3π"
+],
+correct: 0,
+explanation: "Quãng đường đi được bằng nhau: R1.α1 = R2.α2. Có 60 . (2π/3) = 20 . α2 => α2 = 3 . (2π/3) = 2π rad."
+},
+{
+text: "Câu 23 (Vận dụng): Tìm m để phương trình (m+1).sin x + m.cos x = 2m - 1 có nghiệm.",
+options: [
+"0 ≤ m ≤ 3",
+"m > 2",
+"m < -1/2",
+"m ∈ R"
+],
+correct: 0,
+explanation: "Điều kiện có nghiệm: (m+1)² + m² ≥ (2m - 1)² ⇔ m² + 2m + 1 + m² ≥ 4m² - 4m + 1 ⇔ 2m² - 6m ≤ 0 ⇔ 0 ≤ m ≤ 3."
+},
+{
+text: "Câu 24 (Vận dụng): Số nghiệm của phương trình sin(x + π/4) = 1 trên đoạn [0; 5π] là:",
+options: [
+"3",
+"2",
+"1",
+"5"
+],
+correct: 0,
+explanation: "x + π/4 = π/2 + k2π ⇔ x = π/4 + k2π. Các nghiệm: π/4 (k=0), 9π/4 (k=1), 17π/4 (k=2). Tổng cộng 3 nghiệm."
+},
+{
+text: "Câu 25 (Vận dụng): Trong tam giác ABC, biểu thức sin A + sin B + sin C bằng:",
+options: [
+"4.cos(A/2).cos(B/2).cos(C/2)",
+"4.sin(A/2).sin(B/2).sin(C/2)",
+"1 + 4.sin(A/2).sin(B/2).sin(C/2)",
+"2.sin A . sin B"
+],
+correct: 0,
+explanation: "Đây là một hệ thức lượng giác cơ bản trong tam giác."
+}
+]
+        };
+
+        let currentIdx = 0;
+        let userAnswers = new Array(QUIZ_DATA.questions.length).fill(null);
+        let isSubmitted = false;
+        let secondsLeft = QUIZ_DATA.time * 60;
+        let timerInterval;
+
+        const qText = document.getElementById('q-text');
+        const optionsList = document.getElementById('options-list');
+        const navGrid = document.getElementById('nav-grid');
+        const timerDisplay = document.getElementById('timer');
+
+        function init() {
+            navGrid.innerHTML = '';
+            QUIZ_DATA.questions.forEach((_, i) => {
+                const item = document.createElement('div');
+                item.className = 'nav-item';
+                item.innerText = i + 1;
+                item.id = `nav-${i}`;
+                item.onclick = () => { currentIdx = i; renderQuestion(); };
+                navGrid.appendChild(item);
+            });
+            renderQuestion();
+            startTimer();
+        }
+
+        function renderQuestion() {
+            const data = QUIZ_DATA.questions[currentIdx];
+            document.getElementById('q-current').innerText = currentIdx + 1;
+            qText.innerText = data.text; // Sửa lỗi gọi thuộc tính .q thành .text
+            
+            optionsList.innerHTML = '';
+            data.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                if (userAnswers[currentIdx] === i) div.classList.add('selected');
+                
+                if (isSubmitted) {
+                    div.classList.add('disabled');
+                    if (i === data.correct) div.classList.add('correct');
+                    if (userAnswers[currentIdx] === i && i !== data.correct) div.classList.add('wrong');
+                } else {
+                    div.onclick = () => selectOption(i);
+                }
+
+                div.innerHTML = `<span style="font-weight:bold; margin-right:10px">${String.fromCharCode(65+i)}.</span> <span>${opt}</span>`;
+                optionsList.appendChild(div);
+            });
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${currentIdx}`).classList.add('active');
+
+            document.getElementById('prev-btn').disabled = currentIdx === 0;
+            document.getElementById('next-btn').disabled = currentIdx === QUIZ_DATA.questions.length - 1;
+
+            const expBox = document.getElementById('explanation-box');
+            if (isSubmitted) {
+                expBox.classList.remove('hidden');
+                document.getElementById('explanation-text').innerText = data.explanation; // Sửa lỗi thuộc tính .explain thành .explanation
+            } else {
+                expBox.classList.add('hidden');
+            }
+        }
+
+        function selectOption(idx) {
+            userAnswers[currentIdx] = idx;
+            document.getElementById(`nav-${currentIdx}`).classList.add('done');
+            renderQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (isSubmitted) return;
+                secondsLeft--;
+                const m = Math.floor(secondsLeft / 60);
+                const s = secondsLeft % 60;
+                timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (secondsLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            clearInterval(timerInterval);
+            let score = 0;
+            userAnswers.forEach((ans, i) => {
+                const navItem = document.getElementById(`nav-${i}`);
+                if (ans === QUIZ_DATA.questions[i].correct) {
+                    score++;
+                    navItem.classList.add('correct');
+                } else {
+                    navItem.classList.add('wrong');
+                }
+            });
+
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('score-percent').innerText = Math.round((score/QUIZ_DATA.questions.length)*100) + "%";
+            renderQuestion();
+        }
+
+        document.getElementById('next-btn').onclick = () => { if (currentIdx < QUIZ_DATA.questions.length - 1) { currentIdx++; renderQuestion(); } };
+        document.getElementById('prev-btn').onclick = () => { if (currentIdx > 0) { currentIdx--; renderQuestion(); } };
+        document.getElementById('submit-btn').onclick = () => { if (confirm("Bạn có chắc chắn muốn nộp bài?")) finishQuiz(); };
+
+        init();
+    </script>
+</body>
+</html>

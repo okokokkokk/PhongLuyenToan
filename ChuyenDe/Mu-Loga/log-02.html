@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng luyện đề trắc nghiệm</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="website icon" type="jpg" href="../../logo.jpg">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #38bdf8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 10px; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timer-container {
+            background: var(--card-bg);
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .q-badge {
+            background: rgba(248, 94, 56, 0.1);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        #q-text { margin: 15px 0; font-size: 1.15rem; font-weight: 500; }
+
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .option {
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .option:hover:not(.disabled) { background: rgba(0, 94, 255, 0.07); border-color: var(--text-secondary); }
+        .option.selected { border-color: var(--primary); background: rgba(0, 157, 255, 0.1); }
+        .option.correct { border-color: var(--success); color: var(--success); background: rgba(34, 197, 94, 0.1); }
+        .option.wrong { border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.1); }
+        .option.disabled { cursor: default; }
+
+        .controls { display: flex; justify-content: space-between; margin-top: 20px; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: #000; width: 100%; justify-content: center; margin-top: 15px; }
+        .btn-secondary { background: var(--border); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; justify-content: center; margin-top: 10px; }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+        }
+
+        .nav-item {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .nav-item.active { border-color: var(--primary); color: var(--primary); outline: 2px solid rgba(56,189,248,0.2); }
+        .nav-item.done { background: #334155; color: #fff; }
+        .nav-item.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .nav-item.wrong { background: var(--error); color: #fff; border-color: var(--error); }
+
+        .explanation-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(56, 189, 248, 0.05);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+        }
+
+        .hidden { display: none; }
+        
+        .score-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        #score-percent { text-align: center; color: var(--text-secondary); font-weight: bold; }
+        /* Màu xanh dương đậm khi chọn */
+        .option.selected {
+            background-color: #2aa2d6 !important; 
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important; /* Chữ trắng cho nổi bật */
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- RESPONSIVE CHO ĐIỆN THOẠI --- */
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .container { padding: 5px; }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .main-layout {
+                grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+            }
+
+            .quiz-section { order: 1; }
+            .sidebar { order: 2; }
+
+            .timer-container { font-size: 1.2rem; width: 100%; justify-content: center; display: flex; }
+            
+            .q-text { font-size: 1.05rem; }
+            .option { padding: 12px; font-size: 0.95rem; }
+            
+            .controls button {
+                flex: 1;
+                padding: 15px 10px; /* Tăng diện tích chạm */
+                font-size: 0.9rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: repeat(5, 1fr); /* Hiển thị 5 ô trên 1 hàng cho gọn */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nút quay lại -->
+    <div style="padding: 10px; max-width: 1100px; margin: 0 auto;">
+        <button onclick="window.history.back()" class="btn btn-secondary" style="width: auto; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </button>
+    </div>
+    <div class="container">
+        <header>
+            <div class="header-info">
+                <h1 id="quiz-title">Hàm số mũ và logarit - Mã đề 02</h1>
+                <p id="quiz-subtitle">Thời gian: <span id="limit-time">45</span> phút</p>
+            </div>
+            <div class="timer-container">
+                <i class="fas fa-clock"></i>
+                <span id="timer">45:00</span>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="quiz-section">
+                <div id="question-card" class="card">
+                    <div class="card-header">
+                        <span class="q-badge">Câu <span id="q-current">1</span>/25</span>
+                    </div>
+                    <h2 id="q-text">Đang tải...</h2>
+                    <div id="options-list" class="options-list"></div>
+                    <div id="explanation-box" class="explanation-box hidden">
+                        <strong><i class="fas fa-lightbulb"></i> Giải thích:</strong>
+                        <p id="explanation-text" style="margin-top:5px; color: var(--text-secondary);"></p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="prev-btn" class="btn btn-secondary"><i class="fas fa-chevron-left"></i> Câu trước</button>
+                    <button id="next-btn" class="btn btn-secondary">Câu sau <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 10px;">Tiến trình làm bài</h3>
+                    <div id="nav-grid" class="nav-grid"></div>
+                    <button id="submit-btn" class="btn btn-primary">NỘP BÀI</button>
+                </div>
+
+                <div id="result-card" class="card hidden">
+                    <h3 style="text-align: center;">KẾT QUẢ</h3>
+                    <div class="score-display">
+                        <span id="score-val">0</span>/<span id="total-val">25</span>
+                    </div>
+                    <p id="score-percent">0%</p>
+                    <button onclick="location.reload()" class="btn btn-outline">Làm lại bài thi</button>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const QUIZ_DATA = {
+            title: "Đề Ôn Tập Mũ và Logarit - Mã đề 02",
+            time: 45,
+            questions: [
+                {
+                text: "Câu 1 (Nhận biết): Tập xác định của hàm số y = log2(x² - 4) là:",
+                options: [
+                "(-∞; -2) ∪ (2; +∞)",
+                "(-2; 2)",
+                "R \ {-2; 2}",
+                "(2; +∞)"
+                ],
+                correct: 0,
+                explanation: "ĐK: x² - 4 > 0 ⇔ (x - 2)(x + 2) > 0 ⇔ x < -2 hoặc x > 2."
+                },
+                {
+                text: "Câu 2 (Nhận biết): Cho a > 0, a ≠ 1. Tính giá trị của biểu thức P = loga(a . ∛a).",
+                options: [
+                "4/3",
+                "1/3",
+                "3/4",
+                "2/3"
+                ],
+                correct: 0,
+                explanation: "P = loga(a . a^(1/3)) = loga(a^(4/3)) = 4/3."
+                },
+                {
+                text: "Câu 3 (Thông hiểu): Đạo hàm của hàm số y = ln(sin x) là:",
+                options: [
+                "cot x",
+                "tan x",
+                "1 / sin x",
+                "cos x"
+                ],
+                correct: 0,
+                explanation: "y' = (sin x)' / sin x = cos x / sin x = cot x."
+                },
+                {
+                text: "Câu 4 (Thông hiểu): Tìm số nghiệm của phương trình log3(x² - 6) = log3(x).",
+                options: [
+                "1",
+                "2",
+                "0",
+                "3"
+                ],
+                correct: 0,
+                explanation: "ĐK: x > √6. PT ⇔ x² - 6 = x ⇔ x² - x - 6 = 0 ⇔ x = 3 (nhận) hoặc x = -2 (loại). Vậy có 1 nghiệm."
+                },
+                {
+                text: "Câu 5 (Thông hiểu): Rút gọn biểu thức P = (x^(1/2) - y^(1/2))² . (1 - 2.√(y/x) + y/x)⁻¹ (với x, y > 0).",
+                options: [
+                "x",
+                "y",
+                "x + y",
+                "x - y"
+                ],
+                correct: 0,
+                explanation: "Biến đổi biểu thức thứ hai về dạng bình đẳng thức rồi rút gọn với biểu thức đầu."
+                },
+                {
+                text: "Câu 6 (Thông hiểu): Cho log2(3) = a. Tính log12(18) theo a.",
+                options: [
+                "(1 + 2a) / (2 + a)",
+                "(1 + a) / (1 + 2a)",
+                "(2 + a) / (1 + 2a)",
+                "a / (1 + a)"
+                ],
+                correct: 0,
+                explanation: "log12(18) = log2(18) / log2(12) = (1 + 2.log2(3)) / (2 + log2(3)) = (1 + 2a) / (2 + a)."
+                },
+                {
+                text: "Câu 7 (Thông hiểu): Tập nghiệm của bất phương trình (√2)ˣ < 4 là:",
+                options: [
+                "(-∞; 4)",
+                "(-∞; 2)",
+                "(4; +∞)",
+                "(2; +∞)"
+                ],
+                correct: 0,
+                explanation: "(2^(1/2))ˣ < 2² ⇔ 2^(x/2) < 2² ⇔ x/2 < 2 ⇔ x < 4."
+                },
+                {
+                text: "Câu 8 (Thông hiểu): Tìm tất cả các giá trị của m để hàm số y = log2(x² - 2x + m) có tập xác định là R.",
+                options: [
+                "m > 1",
+                "m ≥ 1",
+                "m < 1",
+                "m > 0"
+                ],
+                correct: 0,
+                explanation: "Để TXĐ là R thì x² - 2x + m > 0 với mọi x ⇔ Δ' = 1 - m < 0 ⇔ m > 1."
+                },
+                {
+                text: "Câu 9 (Thông hiểu): Độ pH của một dung dịch được tính bằng công thức pH = -log[H⁺], trong đó [H⁺] là nồng độ ion Hydrogen. Nếu nồng độ [H⁺] tăng lên 10 lần thì độ pH thay đổi như thế nào?",
+                options: [
+                "Giảm đi 1 đơn vị",
+                "Tăng lên 10 đơn vị",
+                "Tăng lên 1 đơn vị",
+                "Giảm đi 10 lần"
+                ],
+                correct: 0,
+                explanation: "pH_mới = -log(10.[H⁺]) = -(log 10 + log[H⁺]) = -1 - log[H⁺] = pH_cũ - 1."
+                },
+                {
+                text: "Câu 10 (Thông hiểu): Cường độ âm L (dB) được tính bởi công thức L = 10.log(I/I₀). Nếu cường độ âm I tăng lên 100 lần thì mức cường độ âm L tăng thêm bao nhiêu decibel?",
+                options: [
+                "20 dB",
+                "100 dB",
+                "10 dB",
+                "2 dB"
+                ],
+                correct: 0,
+                explanation: "L_mới = 10.log(100I/I₀) = 10(log 100 + log(I/I₀)) = 10(2 + L_cũ/10) = 20 + L_cũ."
+                },
+                {
+                text: "Câu 11 (Vận dụng): Giải bất phương trình log1/2(2x - 1) > -2.",
+                options: [
+                "(1/2; 5/2)",
+                "(1/2; 2)",
+                "(-∞; 5/2)",
+                "(5/2; +∞)"
+                ],
+                correct: 0,
+                explanation: "ĐK: x > 1/2. PT ⇔ 2x - 1 < (1/2)⁻² = 4 ⇔ 2x < 5 ⇔ x < 5/2. Kết hợp ĐK: 1/2 < x < 5/2."
+                },
+                {
+                text: "Câu 12 (Vận dụng): Tổng các nghiệm của phương trình 4ˣ - 6.2ˣ + 8 = 0 là:",
+                options: [
+                "3",
+                "6",
+                "8",
+                "4"
+                ],
+                correct: 0,
+                explanation: "Đặt t = 2ˣ > 0. PT: t² - 6t + 8 = 0 ⇔ t=2 hoặc t=4. Suy ra x=1 hoặc x=2. Tổng nghiệm = 3."
+                },
+                {
+                text: "Câu 13 (Vận dụng): Cho f(x) = eˣ . x². Nghiệm của bất phương trình f'(x) < 0 là:",
+                options: [
+                "(-2; 0)",
+                "(-∞; -2)",
+                "(0; +∞)",
+                "R"
+                ],
+                correct: 0,
+                explanation: "f'(x) = eˣ.x² + 2x.eˣ = eˣ(x² + 2x). f'(x) < 0 ⇔ x² + 2x < 0 ⇔ -2 < x < 0."
+                },
+                {
+                text: "Câu 14 (Vận dụng): Tính đạo hàm của hàm số y = log2(x + √(x² + 1)).",
+                options: [
+                "1 / ( (x + √(x²+1)).ln 2 )",
+                "1 / ( √(x²+1).ln 2 )",
+                "√(x²+1) / ln 2",
+                "1 / ln 2"
+                ],
+                correct: 1,
+                explanation: "y' = (x + √(x²+1))' / [ (x + √(x²+1)).ln 2 ]. Sau khi rút gọn tử số, ta còn 1 / [√(x²+1).ln 2]."
+                },
+                {
+                text: "Câu 15 (Vận dụng): Tìm m để phương trình (log3(x))² - m.log3(x) + 2m - 7 = 0 có hai nghiệm x₁, x₂ thỏa mãn x₁x₂ = 81.",
+                options: [
+                "m = 4",
+                "m = 81",
+                "m = 2",
+                "m = 44"
+                ],
+                correct: 0,
+                explanation: "Đặt t = log3(x). Phương trình: t² - mt + 2m - 7 = 0. x₁x₂ = 81 ⇔ log3(x₁x₂) = 4 ⇔ t₁ + t₂ = 4. Theo Viet, t₁ + t₂ = m => m = 4."
+                },
+                {
+                text: "Câu 16 (Vận dụng): Giải bất phương trình 9ˣ - 10.3ˣ + 9 ≤ 0.",
+                options: [
+                "0 ≤ x ≤ 2",
+                "1 ≤ x ≤ 9",
+                "x ≤ 0 hoặc x ≥ 2",
+                "Vô nghiệm"
+                ],
+                correct: 0,
+                explanation: "Đặt t = 3ˣ. 1 ≤ t ≤ 9 ⇔ 3⁰ ≤ 3ˣ ≤ 3² ⇔ 0 ≤ x ≤ 2."
+                },
+                {
+                text: "Câu 17 (Vận dụng): Tìm giá trị lớn nhất của hàm số y = x - ln(x) trên đoạn [1; e].",
+                options: [
+                "e - 1",
+                "1",
+                "e",
+                "2"
+                ],
+                correct: 0,
+                explanation: "y' = 1 - 1/x. y' = 0 ⇔ x = 1. f(1) = 1; f(e) = e - 1. Vì e ≈ 2,718 nên e - 1 > 1."
+                },
+                {
+                text: "Câu 18 (Vận dụng): Phương trình 5ˣ + 3ˣ = 8 có bao nhiêu nghiệm thực?",
+                options: [
+                "1",
+                "2",
+                "0",
+                "Vô số"
+                ],
+                correct: 0,
+                explanation: "Vế trái là hàm số đồng biến, vế phải là hằng số. Đồ thị cắt nhau tại duy nhất 1 điểm (x=1)."
+                },
+                {
+                text: "Câu 19 (Vận dụng): Cho loga(b) = 3, loga(c) = -2. Tính loga(a³b²/c).",
+                options: [
+                "11",
+                "7",
+                "5",
+                "10"
+                ],
+                correct: 0,
+                explanation: "loga(a³b²/c) = 3 + 2.loga(b) - loga(c) = 3 + 2(3) - (-2) = 3 + 6 + 2 = 11."
+                },
+                {
+                text: "Câu 20 (Vận dụng): Dân số thế giới được ước tính theo công thức S = A.eⁿʳ, trong đó A là dân số của năm lấy làm mốc, S là dân số sau n năm, r là tỷ lệ tăng dân số hàng năm. Nếu dân số năm 2020 là 7,8 tỷ người và tỷ lệ tăng là 1,1%/năm thì đến năm nào dân số sẽ đạt 10 tỷ người?",
+                options: [
+                "Năm 2043",
+                "Năm 2035",
+                "Năm 2050",
+                "Năm 2040"
+                ],
+                correct: 0,
+                explanation: "7,8.e^(n.0,011) = 10 ⇔ n.0,011 = ln(10/7,8) ⇔ n ≈ 22,59. Vậy là năm 2020 + 23 = 2043."
+                },
+                {
+                text: "Câu 21 (Vận dụng): Tìm tập nghiệm của bất phương trình log2(x - 3) + log2(x - 1) ≤ 3.",
+                options: [
+                "(3; 5]",
+                "[1; 5]",
+                "(3; +∞)",
+                "(1; 3)"
+                ],
+                correct: 0,
+                explanation: "ĐK: x > 3. PT ⇔ (x-3)(x-1) ≤ 8 ⇔ x² - 4x - 5 ≤ 0 ⇔ -1 ≤ x ≤ 5. Kết hợp ĐK: 3 < x ≤ 5."
+                },
+                {
+                text: "Câu 22 (Vận dụng): Cho x, y là các số thực dương thỏa mãn log9(x) = log12(y) = log16(x + y). Tính tỷ số x/y.",
+                options: [
+                "(√5 - 1) / 2",
+                "(√5 + 1) / 2",
+                "1",
+                "2/3"
+                ],
+                correct: 0,
+                explanation: "Đặt log = t. Ta có x = 9ᵗ, y = 12ᵗ, x+y = 16ᵗ. Chia cả hai vế cho 16ᵗ để giải phương trình bậc 2 theo x/y."
+                },
+                {
+                text: "Câu 23 (Vận dụng): Tìm m để phương trình 4ˣ - m.2ˣ⁺¹ + 2m = 0 có hai nghiệm phân biệt.",
+                options: [
+                "m > 2",
+                "m < 0",
+                "0 < m < 2",
+                "m > 0"
+                ],
+                correct: 0,
+                explanation: "Đặt t = 2ˣ. t² - 2mt + 2m = 0. Cần Δ' > 0 và S > 0, P > 0 để có 2 nghiệm t dương phân biệt."
+                },
+                {
+                text: "Câu 24 (Vận dụng): Hàm số y = ln(x² + 1) - mx đồng biến trên R khi:",
+                options: [
+                "m ≤ -1",
+                "m ≤ 1",
+                "m ≥ 1",
+                "m = 0"
+                ],
+                correct: 0,
+                explanation: "y' = 2x/(x²+1) - m. Để y' ≥ 0 với mọi x thì m ≤ 2x/(x²+1). Giá trị nhỏ nhất của 2x/(x²+1) là -1."
+                },
+                {
+                text: "Câu 25 (Vận dụng): Cho a, b > 0 thỏa mãn a² + b² = 7ab. Khẳng định nào sau đây đúng?",
+                options: [
+                "log3((a+b)/3) = (log3(a) + log3(b)) / 2",
+                "log3(a+b) = (log3(a) + log3(b)) / 2",
+                "2.log3(a+b) = log3(a) + log3(b)",
+                "log3((a+b)/3) = log3(a) + log3(b)"
+                ],
+                correct: 0,
+                explanation: "a² + b² = 7ab ⇔ (a+b)² = 9ab ⇔ ((a+b)/3)² = ab. Lấy log cơ số 3 hai vế."
+                }
+                ]
+        };
+
+        let currentIdx = 0;
+        let userAnswers = new Array(QUIZ_DATA.questions.length).fill(null);
+        let isSubmitted = false;
+        let secondsLeft = QUIZ_DATA.time * 60;
+        let timerInterval;
+
+        const qText = document.getElementById('q-text');
+        const optionsList = document.getElementById('options-list');
+        const navGrid = document.getElementById('nav-grid');
+        const timerDisplay = document.getElementById('timer');
+
+        function init() {
+            navGrid.innerHTML = '';
+            QUIZ_DATA.questions.forEach((_, i) => {
+                const item = document.createElement('div');
+                item.className = 'nav-item';
+                item.innerText = i + 1;
+                item.id = `nav-${i}`;
+                item.onclick = () => { currentIdx = i; renderQuestion(); };
+                navGrid.appendChild(item);
+            });
+            renderQuestion();
+            startTimer();
+        }
+
+        function renderQuestion() {
+            const data = QUIZ_DATA.questions[currentIdx];
+            document.getElementById('q-current').innerText = currentIdx + 1;
+            qText.innerText = data.text; // Sửa lỗi gọi thuộc tính .q thành .text
+            
+            optionsList.innerHTML = '';
+            data.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                if (userAnswers[currentIdx] === i) div.classList.add('selected');
+                
+                if (isSubmitted) {
+                    div.classList.add('disabled');
+                    if (i === data.correct) div.classList.add('correct');
+                    if (userAnswers[currentIdx] === i && i !== data.correct) div.classList.add('wrong');
+                } else {
+                    div.onclick = () => selectOption(i);
+                }
+
+                div.innerHTML = `<span style="font-weight:bold; margin-right:10px">${String.fromCharCode(65+i)}.</span> <span>${opt}</span>`;
+                optionsList.appendChild(div);
+            });
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${currentIdx}`).classList.add('active');
+
+            document.getElementById('prev-btn').disabled = currentIdx === 0;
+            document.getElementById('next-btn').disabled = currentIdx === QUIZ_DATA.questions.length - 1;
+
+            const expBox = document.getElementById('explanation-box');
+            if (isSubmitted) {
+                expBox.classList.remove('hidden');
+                document.getElementById('explanation-text').innerText = data.explanation; // Sửa lỗi thuộc tính .explain thành .explanation
+            } else {
+                expBox.classList.add('hidden');
+            }
+        }
+
+        function selectOption(idx) {
+            userAnswers[currentIdx] = idx;
+            document.getElementById(`nav-${currentIdx}`).classList.add('done');
+            renderQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (isSubmitted) return;
+                secondsLeft--;
+                const m = Math.floor(secondsLeft / 60);
+                const s = secondsLeft % 60;
+                timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (secondsLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            clearInterval(timerInterval);
+            let score = 0;
+            userAnswers.forEach((ans, i) => {
+                const navItem = document.getElementById(`nav-${i}`);
+                if (ans === QUIZ_DATA.questions[i].correct) {
+                    score++;
+                    navItem.classList.add('correct');
+                } else {
+                    navItem.classList.add('wrong');
+                }
+            });
+
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('score-percent').innerText = Math.round((score/QUIZ_DATA.questions.length)*100) + "%";
+            renderQuestion();
+        }
+
+        document.getElementById('next-btn').onclick = () => { if (currentIdx < QUIZ_DATA.questions.length - 1) { currentIdx++; renderQuestion(); } };
+        document.getElementById('prev-btn').onclick = () => { if (currentIdx > 0) { currentIdx--; renderQuestion(); } };
+        document.getElementById('submit-btn').onclick = () => { if (confirm("Bạn có chắc chắn muốn nộp bài?")) finishQuiz(); };
+
+        init();
+    </script>
+</body>
+</html>

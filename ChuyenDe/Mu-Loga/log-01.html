@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng luyện đề trắc nghiệm</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="website icon" type="jpg" href="../../logo.jpg">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #38bdf8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 10px; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timer-container {
+            background: var(--card-bg);
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .q-badge {
+            background: rgba(248, 94, 56, 0.1);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        #q-text { margin: 15px 0; font-size: 1.15rem; font-weight: 500; }
+
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .option {
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .option:hover:not(.disabled) { background: rgba(0, 94, 255, 0.07); border-color: var(--text-secondary); }
+        .option.selected { border-color: var(--primary); background: rgba(0, 157, 255, 0.1); }
+        .option.correct { border-color: var(--success); color: var(--success); background: rgba(34, 197, 94, 0.1); }
+        .option.wrong { border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.1); }
+        .option.disabled { cursor: default; }
+
+        .controls { display: flex; justify-content: space-between; margin-top: 20px; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: #000; width: 100%; justify-content: center; margin-top: 15px; }
+        .btn-secondary { background: var(--border); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; justify-content: center; margin-top: 10px; }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+        }
+
+        .nav-item {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .nav-item.active { border-color: var(--primary); color: var(--primary); outline: 2px solid rgba(56,189,248,0.2); }
+        .nav-item.done { background: #334155; color: #fff; }
+        .nav-item.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .nav-item.wrong { background: var(--error); color: #fff; border-color: var(--error); }
+
+        .explanation-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(56, 189, 248, 0.05);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+        }
+
+        .hidden { display: none; }
+        
+        .score-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        #score-percent { text-align: center; color: var(--text-secondary); font-weight: bold; }
+        /* Màu xanh dương đậm khi chọn */
+        .option.selected {
+            background-color: #2aa2d6 !important; 
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important; /* Chữ trắng cho nổi bật */
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- RESPONSIVE CHO ĐIỆN THOẠI --- */
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .container { padding: 5px; }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .main-layout {
+                grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+            }
+
+            .quiz-section { order: 1; }
+            .sidebar { order: 2; }
+
+            .timer-container { font-size: 1.2rem; width: 100%; justify-content: center; display: flex; }
+            
+            .q-text { font-size: 1.05rem; }
+            .option { padding: 12px; font-size: 0.95rem; }
+            
+            .controls button {
+                flex: 1;
+                padding: 15px 10px; /* Tăng diện tích chạm */
+                font-size: 0.9rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: repeat(5, 1fr); /* Hiển thị 5 ô trên 1 hàng cho gọn */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nút quay lại -->
+    <div style="padding: 10px; max-width: 1100px; margin: 0 auto;">
+        <button onclick="window.history.back()" class="btn btn-secondary" style="width: auto; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </button>
+    </div>
+    <div class="container">
+        <header>
+            <div class="header-info">
+                <h1 id="quiz-title">Hàm số mũ và logarit - Mã đề 01</h1>
+                <p id="quiz-subtitle">Thời gian: <span id="limit-time">45</span> phút</p>
+            </div>
+            <div class="timer-container">
+                <i class="fas fa-clock"></i>
+                <span id="timer">45:00</span>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="quiz-section">
+                <div id="question-card" class="card">
+                    <div class="card-header">
+                        <span class="q-badge">Câu <span id="q-current">1</span>/25</span>
+                    </div>
+                    <h2 id="q-text">Đang tải...</h2>
+                    <div id="options-list" class="options-list"></div>
+                    <div id="explanation-box" class="explanation-box hidden">
+                        <strong><i class="fas fa-lightbulb"></i> Giải thích:</strong>
+                        <p id="explanation-text" style="margin-top:5px; color: var(--text-secondary);"></p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="prev-btn" class="btn btn-secondary"><i class="fas fa-chevron-left"></i> Câu trước</button>
+                    <button id="next-btn" class="btn btn-secondary">Câu sau <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 10px;">Tiến trình làm bài</h3>
+                    <div id="nav-grid" class="nav-grid"></div>
+                    <button id="submit-btn" class="btn btn-primary">NỘP BÀI</button>
+                </div>
+
+                <div id="result-card" class="card hidden">
+                    <h3 style="text-align: center;">KẾT QUẢ</h3>
+                    <div class="score-display">
+                        <span id="score-val">0</span>/<span id="total-val">25</span>
+                    </div>
+                    <p id="score-percent">0%</p>
+                    <button onclick="location.reload()" class="btn btn-outline">Làm lại bài thi</button>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const QUIZ_DATA = {
+            title: "Đề Ôn Tập Mũ và Logarit - Mã đề 01",
+            time: 45,
+            questions: [
+                {
+                text: "Câu 1 (Nhận biết): Với a là số thực dương tùy ý, biểu thức √(a³) viết dưới dạng lũy thừa với số mũ hữu tỷ là:",
+                options: [
+                "a^(3/2)",
+                "a^(2/3)",
+                "a^6",
+                "a^(1/3)"
+                ],
+                correct: 0,
+                explanation: "Công thức tổng quát: ⁿ√(aᵐ) = a^(m/n). Ở đây n=2, m=3 nên kết quả là a^(3/2)."
+                },
+                {
+                text: "Câu 2 (Nhận biết): Cho a, b là các số thực dương và a ≠ 1. Công thức nào sau đây đúng?",
+                options: [
+                "loga(a) = 1",
+                "loga(1) = a",
+                "loga(a) = 0",
+                "loga(x+y) = loga(x) + loga(y)"
+                ],
+                correct: 0,
+                explanation: "Theo định nghĩa logarit, log cơ số a của chính nó luôn bằng 1: loga(a) = 1."
+                },
+                {
+                text: "Câu 3 (Nhận biết): Hàm số y = 2ˣ có tập xác định là:",
+                options: [
+                "R",
+                "(0; +∞)",
+                "R \ {0}",
+                "[0; +∞)"
+                ],
+                correct: 0,
+                explanation: "Hàm số mũ y = aˣ luôn xác định với mọi x ∈ R."
+                },
+                {
+                text: "Câu 4 (Nhận biết): Trong các hàm số sau, hàm số nào là hàm số lôgarit?",
+                options: [
+                "y = log3(x)",
+                "y = x³",
+                "y = 3ˣ",
+                "y = 3/x"
+                ],
+                correct: 0,
+                explanation: "Hàm số lôgarit có dạng y = loga(x) với 0 < a ≠ 1."
+                },
+                {
+                text: "Câu 5 (Nhận biết): Đồ thị hàm số y = aˣ (0 < a ≠ 1) luôn đi qua điểm nào sau đây?",
+                options: [
+                "(0; 1)",
+                "(1; 0)",
+                "(0; 0)",
+                "(1; a)"
+                ],
+                correct: 0,
+                explanation: "Với mọi a ≠ 0, a⁰ = 1. Do đó đồ thị luôn đi qua điểm (0; 1)."
+                },
+                {
+                text: "Câu 6 (Thông hiểu): Tính giá trị biểu thức P = log2(8).",
+                options: [
+                "3",
+                "4",
+                "2",
+                "8"
+                ],
+                correct: 0,
+                explanation: "Vì 8 = 2³, nên log2(8) = log2(2³) = 3."
+                },
+                {
+                text: "Câu 7 (Thông hiểu): Tìm tập xác định D của hàm số y = log5(x - 2).",
+                options: [
+                "D = (2; +∞)",
+                "D = [2; +∞)",
+                "D = R \ {2}",
+                "D = (0; +∞)"
+                ],
+                correct: 0,
+                explanation: "Điều kiện xác định của logarit là biểu thức dưới dấu log phải dương: x - 2 > 0 ⇔ x > 2."
+                },
+                {
+                text: "Câu 8 (Thông hiểu): Rút gọn biểu thức Q = b^(1/3) . ⁶√b (với b > 0).",
+                options: [
+                "√b",
+                "b²",
+                "b^(1/9)",
+                "b"
+                ],
+                correct: 0,
+                explanation: "Q = b^(1/3) . b^(1/6) = b^(1/3 + 1/6) = b^(1/2) = √b."
+                },
+                {
+                text: "Câu 9 (Thông hiểu): Cho loga(b) = 2. Tính giá trị của loga(a²b).",
+                options: [
+                "4",
+                "2",
+                "3",
+                "5"
+                ],
+                correct: 0,
+                explanation: "loga(a²b) = loga(a²) + loga(b) = 2 + 2 = 4."
+                },
+                {
+                text: "Câu 10 (Thông hiểu): Đồ thị hàm số y = log2(x) nằm hoàn toàn bên phải trục tung vì:",
+                options: [
+                "Tập xác định là (0; +∞)",
+                "Hàm số luôn đồng biến",
+                "Giá trị y luôn dương",
+                "Cơ số 2 lớn hơn 1"
+                ],
+                correct: 0,
+                explanation: "Vì điều kiện x > 0 nên đồ thị chỉ tồn tại ở nửa mặt phẳng bên phải trục tung (hoành độ dương)."
+                },
+                {
+                text: "Câu 11 (Thông hiểu): Trong các hàm số sau, hàm số nào đồng biến trên R?",
+                options: [
+                "y = (1,2)ˣ",
+                "y = (0,5)ˣ",
+                "y = (√2 / 2)ˣ",
+                "y = (1/3)ˣ"
+                ],
+                correct: 0,
+                explanation: "Hàm số mũ y = aˣ đồng biến khi a > 1. Ở đây 1,2 > 1."
+                },
+                {
+                text: "Câu 12 (Thông hiểu): Tính giá trị biểu thức T = 2^[log2(5)].",
+                options: [
+                "5",
+                "2",
+                "log5(2)",
+                "25"
+                ],
+                correct: 0,
+                explanation: "Áp dụng công thức a^[loga(b)] = b."
+                },
+                {
+                text: "Câu 13 (Thông hiểu): Cho x, y là các số thực dương. Khẳng định nào sau đây SAI?",
+                options: [
+                "log(x/y) = log(x) / log(y)",
+                "log(x.y) = log(x) + log(y)",
+                "log(x²) = 2.log(x)",
+                "ln(e) = 1"
+                ],
+                correct: 0,
+                explanation: "Công thức đúng phải là log(x/y) = log(x) - log(y). Phép chia logarit không bằng thương hai logarit."
+                },
+                {
+                text: "Câu 14 (Thông hiểu): Số nghiệm của phương trình 3ˣ = -1 là:",
+                options: [
+                "0",
+                "1",
+                "2",
+                "Vô số"
+                ],
+                correct: 0,
+                explanation: "Vì aˣ luôn dương với mọi x, nên phương trình aˣ = m (m ≤ 0) luôn vô nghiệm."
+                },
+                {
+                text: "Câu 15 (Thông hiểu): Tính đạo hàm của hàm số y = e²ˣ.",
+                options: [
+                "y' = 2.e²ˣ",
+                "y' = e²ˣ",
+                "y' = 2x.e²ˣ⁻¹",
+                "y' = 1/2 . e²ˣ"
+                ],
+                correct: 0,
+                explanation: "Đạo hàm hàm hợp (eᵘ)' = u' . eᵘ. Với u = 2x thì u' = 2."
+                },
+                {
+                text: "Câu 16 (Vận dụng thấp): Giải phương trình 2^(x+1) = 8.",
+                options: [
+                "x = 2",
+                "x = 3",
+                "x = 1",
+                "x = 4"
+                ],
+                correct: 0,
+                explanation: "2^(x+1) = 2³ ⇔ x + 1 = 3 ⇔ x = 2."
+                },
+                {
+                text: "Câu 17 (Vận dụng thấp): Tập nghiệm của bất phương trình (1/2)ˣ > 4 là:",
+                options: [
+                "(-∞; -2)",
+                "(-2; +∞)",
+                "(2; +∞)",
+                "(-∞; 2)"
+                ],
+                correct: 0,
+                explanation: "(1/2)ˣ > (1/2)⁻². Vì cơ số 1/2 < 1 nên bất phương trình đổi chiều: x < -2."
+                },
+                {
+                text: "Câu 18 (Vận dụng thấp): Nghiệm của phương trình log3(2x - 1) = 2 là:",
+                options: [
+                "x = 5",
+                "x = 4",
+                "x = 9",
+                "x = 1"
+                ],
+                correct: 0,
+                explanation: "2x - 1 = 3² = 9 ⇔ 2x = 10 ⇔ x = 5. Kiểm tra điều kiện 2x-1 > 0 (thỏa mãn)."
+                },
+                {
+                text: "Câu 19 (Vận dụng thấp): Tìm tập nghiệm S của bất phương trình log0,5(x) < log0,5(2).",
+                options: [
+                "S = (2; +∞)",
+                "S = (0; 2)",
+                "S = [2; +∞)",
+                "S = (-∞; 2)"
+                ],
+                correct: 0,
+                explanation: "Vì cơ số 0,5 < 1 nên bất phương trình đổi chiều: x > 2. Kết hợp điều kiện x > 0 ta có S = (2; +∞)."
+                },
+                {
+                text: "Câu 20 (Vận dụng thấp): Giải phương trình 9ˣ - 4.3ˣ + 3 = 0.",
+                options: [
+                "x = 0; x = 1",
+                "x = 1; x = 3",
+                "x = 0; x = 3",
+                "Vô nghiệm"
+                ],
+                correct: 0,
+                explanation: "Đặt t = 3ˣ (t > 0). Ta có t² - 4t + 3 = 0 ⇔ t = 1 hoặc t = 3. Suy ra x = 0 hoặc x = 1."
+                },
+                {
+                text: "Câu 21 (Vận dụng thấp): Tính tổng các nghiệm của phương trình log2(x) + log2(x - 2) = 3.",
+                options: [
+                "4",
+                "2",
+                "8",
+                "6"
+                ],
+                correct: 0,
+                explanation: "ĐK: x > 2. PT ⇔ log2[x(x-2)] = 3 ⇔ x² - 2x = 8 ⇔ x² - 2x - 8 = 0 ⇔ x = 4 (nhận) hoặc x = -2 (loại)."
+                },
+                {
+                text: "Câu 22 (Vận dụng thấp): Cho hàm số f(x) = ln(x² + 1). Tính f'(1).",
+                options: [
+                "1",
+                "2",
+                "0",
+                "1/2"
+                ],
+                correct: 0,
+                explanation: "f'(x) = (x²+1)' / (x²+1) = 2x / (x²+1). Tại x = 1, f'(1) = 2/2 = 1."
+                },
+                {
+                text: "Câu 23 (Vận dụng thấp): Tìm m để phương trình 4ˣ - m = 0 có nghiệm.",
+                options: [
+                "m > 0",
+                "m ≥ 0",
+                "m ≠ 0",
+                "m < 0"
+                ],
+                correct: 0,
+                explanation: "Phương trình ⇔ 4ˣ = m. Vì 4ˣ luôn dương nên phương trình có nghiệm khi và chỉ khi m > 0."
+                },
+                {
+                text: "Câu 24 (Vận dụng thấp): Một người gửi 100 triệu đồng vào ngân hàng với lãi suất 6%/năm (lãi kép). Sau 2 năm số tiền cả vốn lẫn lãi là:",
+                options: [
+                "112,36 triệu",
+                "112 triệu",
+                "106 triệu",
+                "120 triệu"
+                ],
+                correct: 0,
+                explanation: "Công thức lãi kép: A = P(1 + r)ⁿ = 100(1 + 0,06)² = 112,36 triệu."
+                },
+                {
+                text: "Câu 25 (Vận dụng thấp): Tìm tập nghiệm của bất phương trình 3^(x²) < 27.",
+                options: [
+                "(-√3; √3)",
+                "(-3; 3)",
+                "(0; 3)",
+                "R"
+                ],
+                correct: 0,
+                explanation: "3^(x²) < 3³ ⇔ x² < 3 ⇔ -√3 < x < √3."
+                }
+                ],
+        };
+
+        let currentIdx = 0;
+        let userAnswers = new Array(QUIZ_DATA.questions.length).fill(null);
+        let isSubmitted = false;
+        let secondsLeft = QUIZ_DATA.time * 60;
+        let timerInterval;
+
+        const qText = document.getElementById('q-text');
+        const optionsList = document.getElementById('options-list');
+        const navGrid = document.getElementById('nav-grid');
+        const timerDisplay = document.getElementById('timer');
+
+        function init() {
+            navGrid.innerHTML = '';
+            QUIZ_DATA.questions.forEach((_, i) => {
+                const item = document.createElement('div');
+                item.className = 'nav-item';
+                item.innerText = i + 1;
+                item.id = `nav-${i}`;
+                item.onclick = () => { currentIdx = i; renderQuestion(); };
+                navGrid.appendChild(item);
+            });
+            renderQuestion();
+            startTimer();
+        }
+
+        function renderQuestion() {
+            const data = QUIZ_DATA.questions[currentIdx];
+            document.getElementById('q-current').innerText = currentIdx + 1;
+            qText.innerText = data.text; // Sửa lỗi gọi thuộc tính .q thành .text
+            
+            optionsList.innerHTML = '';
+            data.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                if (userAnswers[currentIdx] === i) div.classList.add('selected');
+                
+                if (isSubmitted) {
+                    div.classList.add('disabled');
+                    if (i === data.correct) div.classList.add('correct');
+                    if (userAnswers[currentIdx] === i && i !== data.correct) div.classList.add('wrong');
+                } else {
+                    div.onclick = () => selectOption(i);
+                }
+
+                div.innerHTML = `<span style="font-weight:bold; margin-right:10px">${String.fromCharCode(65+i)}.</span> <span>${opt}</span>`;
+                optionsList.appendChild(div);
+            });
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${currentIdx}`).classList.add('active');
+
+            document.getElementById('prev-btn').disabled = currentIdx === 0;
+            document.getElementById('next-btn').disabled = currentIdx === QUIZ_DATA.questions.length - 1;
+
+            const expBox = document.getElementById('explanation-box');
+            if (isSubmitted) {
+                expBox.classList.remove('hidden');
+                document.getElementById('explanation-text').innerText = data.explanation; // Sửa lỗi thuộc tính .explain thành .explanation
+            } else {
+                expBox.classList.add('hidden');
+            }
+        }
+
+        function selectOption(idx) {
+            userAnswers[currentIdx] = idx;
+            document.getElementById(`nav-${currentIdx}`).classList.add('done');
+            renderQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (isSubmitted) return;
+                secondsLeft--;
+                const m = Math.floor(secondsLeft / 60);
+                const s = secondsLeft % 60;
+                timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (secondsLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            clearInterval(timerInterval);
+            let score = 0;
+            userAnswers.forEach((ans, i) => {
+                const navItem = document.getElementById(`nav-${i}`);
+                if (ans === QUIZ_DATA.questions[i].correct) {
+                    score++;
+                    navItem.classList.add('correct');
+                } else {
+                    navItem.classList.add('wrong');
+                }
+            });
+
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('score-percent').innerText = Math.round((score/QUIZ_DATA.questions.length)*100) + "%";
+            renderQuestion();
+        }
+
+        document.getElementById('next-btn').onclick = () => { if (currentIdx < QUIZ_DATA.questions.length - 1) { currentIdx++; renderQuestion(); } };
+        document.getElementById('prev-btn').onclick = () => { if (currentIdx > 0) { currentIdx--; renderQuestion(); } };
+        document.getElementById('submit-btn').onclick = () => { if (confirm("Bạn có chắc chắn muốn nộp bài?")) finishQuiz(); };
+
+        init();
+    </script>
+</body>
+</html>

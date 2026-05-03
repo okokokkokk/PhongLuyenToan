@@ -3,16 +3,15 @@ const chuyenDeList = [
   { name: "Xác Suất", image: "hanu.jpg" },
   { name: "Đạo Hàm", image: "hanu2.jpg" },
   { name: "Lượng Giác", image: "hanu4.jpg" },
-  { name: "Thể Tích", image: "hanu9.jpg" },
-  { name: "Hàm Số", image: "hanu6.jpg" },
-  { name: "Hình Học", image: "hanu5.jpg" },
-  { name: "Phương Trình", image: "hanu8.jpg" },
-  { name: "Tổ Hợp", image: "hanu7.jpg" }
+  { name: "Dãy Số", image: "hanu9.jpg" },
+  { name: "Hàm Số Mũ Và Logarit", image: "hanu6.jpg" },
+  { name: "Góc Trong Không Gian", image: "hanu5.jpg" },
+  { name: "Khoảng Cách", image: "hanu8.jpg" },
+  { name: "Thể tích", image: "hanu7.jpg" }
 ];
 
-// Nơi bạn sẽ "đăng đề" bằng VS Code
-// Mỗi khi có đề mới, bạn chỉ cần thêm một dòng vào mảng này
 const deThiList = [
+  // ------------------Chuyên đề Xác Suất-----------------------
   {
     chuyenDe: "Xác Suất",
     tenDe: "Đề số 01 - Xác suất",
@@ -27,6 +26,7 @@ const deThiList = [
     soCau: 25,
     thoiGian: 45
   },
+  // ------------------Chuyên đề Đạo Hàm-----------------------
   {
     chuyenDe: "Đạo Hàm",
     tenDe: "Đề số 01 - Đạo hàm",
@@ -59,6 +59,65 @@ const deThiList = [
     chuyenDe: "Đạo Hàm",
     tenDe: "Đề số 05 - Đạo hàm",
     linkDe: "ChuyenDe/Dao-ham/dh-05.html",
+    soCau: 25,
+    thoiGian: 45
+  },
+  // ------------------Chuyên đề hàm số Lượng Giác-------------------------
+  {
+    chuyenDe: "Lượng Giác",
+    tenDe: "Đề số 01 - Lượng Giác",
+    linkDe: "ChuyenDe/Luong-giac/lgiac-01.html",
+    soCau: 25,
+    thoiGian: 45
+  },
+  {
+    chuyenDe: "Lượng Giác",
+    tenDe: "Đề số 02 - Lượng Giác",
+    linkDe: "ChuyenDe/Luong-giac/lgiac-02.html",
+    soCau: 25,
+    thoiGian: 45
+  },
+  {
+    chuyenDe: "Lượng Giác",
+    tenDe: "Đề số 03 - Lượng Giác",
+    linkDe: "ChuyenDe/Luong-giac/lgiac-03.html",
+    soCau: 25,
+    thoiGian: 45
+  },
+  // ------------------Dãy số, cấp số cộng, cấp số nhân---------------------
+  {
+    chuyenDe: "Dãy Số",
+    tenDe: "Đề số 01 - Dãy số",
+    linkDe: "ChuyenDe/Day-so/ds-01.html",
+    soCau: 25,
+    thoiGian: 45
+  },
+  {
+    chuyenDe: "Dãy Số",
+    tenDe: "Đề số 02 - Dãy số",
+    linkDe: "ChuyenDe/Day-so/ds-02.html",
+    soCau: 25,
+    thoiGian: 45
+  },
+  // ------------------Chuyên đề hàm số Mũ và Logarit-----------------------
+  {
+    chuyenDe: "Hàm Số Mũ Và Logarit",
+    tenDe: "Đề số 01 - Mũ và Logarit",
+    linkDe: "ChuyenDe/Mu-Loga/log-01.html",
+    soCau: 25,
+    thoiGian: 45
+  },
+  {
+    chuyenDe: "Hàm Số Mũ Và Logarit",
+    tenDe: "Đề số 02 - Mũ và Logarit",
+    linkDe: "ChuyenDe/Mu-Loga/log-02.html",
+    soCau: 25,
+    thoiGian: 45
+  },
+  {
+    chuyenDe: "Hàm Số Mũ Và Logarit",
+    tenDe: "Đề số 03 - Mũ và Logarit",
+    linkDe: "ChuyenDe/Mu-Loga/log-03.html",
     soCau: 25,
     thoiGian: 45
   },

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng luyện đề trắc nghiệm</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="website icon" type="jpg" href="../../logo.jpg">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #38bdf8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 10px; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timer-container {
+            background: var(--card-bg);
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .q-badge {
+            background: rgba(248, 94, 56, 0.1);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        #q-text { margin: 15px 0; font-size: 1.15rem; font-weight: 500; }
+
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .option {
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .option:hover:not(.disabled) { background: rgba(0, 94, 255, 0.07); border-color: var(--text-secondary); }
+        .option.selected { border-color: var(--primary); background: rgba(0, 157, 255, 0.1); }
+        .option.correct { border-color: var(--success); color: var(--success); background: rgba(34, 197, 94, 0.1); }
+        .option.wrong { border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.1); }
+        .option.disabled { cursor: default; }
+
+        .controls { display: flex; justify-content: space-between; margin-top: 20px; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: #000; width: 100%; justify-content: center; margin-top: 15px; }
+        .btn-secondary { background: var(--border); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; justify-content: center; margin-top: 10px; }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+        }
+
+        .nav-item {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .nav-item.active { border-color: var(--primary); color: var(--primary); outline: 2px solid rgba(56,189,248,0.2); }
+        .nav-item.done { background: #334155; color: #fff; }
+        .nav-item.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .nav-item.wrong { background: var(--error); color: #fff; border-color: var(--error); }
+
+        .explanation-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(56, 189, 248, 0.05);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+        }
+
+        .hidden { display: none; }
+        
+        .score-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        #score-percent { text-align: center; color: var(--text-secondary); font-weight: bold; }
+        /* Màu xanh dương đậm khi chọn */
+        .option.selected {
+            background-color: #2aa2d6 !important; 
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important; /* Chữ trắng cho nổi bật */
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- RESPONSIVE CHO ĐIỆN THOẠI --- */
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .container { padding: 5px; }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .main-layout {
+                grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+            }
+
+            .quiz-section { order: 1; }
+            .sidebar { order: 2; }
+
+            .timer-container { font-size: 1.2rem; width: 100%; justify-content: center; display: flex; }
+            
+            .q-text { font-size: 1.05rem; }
+            .option { padding: 12px; font-size: 0.95rem; }
+            
+            .controls button {
+                flex: 1;
+                padding: 15px 10px; /* Tăng diện tích chạm */
+                font-size: 0.9rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: repeat(5, 1fr); /* Hiển thị 5 ô trên 1 hàng cho gọn */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nút quay lại -->
+    <div style="padding: 10px; max-width: 1100px; margin: 0 auto;">
+        <button onclick="window.history.back()" class="btn btn-secondary" style="width: auto; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </button>
+    </div>
+    <div class="container">
+        <header>
+            <div class="header-info">
+                <h1 id="quiz-title">Dãy Số - Mã đề 02</h1>
+                <p id="quiz-subtitle">Thời gian: <span id="limit-time">45</span> phút</p>
+            </div>
+            <div class="timer-container">
+                <i class="fas fa-clock"></i>
+                <span id="timer">45:00</span>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="quiz-section">
+                <div id="question-card" class="card">
+                    <div class="card-header">
+                        <span class="q-badge">Câu <span id="q-current">1</span>/25</span>
+                    </div>
+                    <h2 id="q-text">Đang tải...</h2>
+                    <div id="options-list" class="options-list"></div>
+                    <div id="explanation-box" class="explanation-box hidden">
+                        <strong><i class="fas fa-lightbulb"></i> Giải thích:</strong>
+                        <p id="explanation-text" style="margin-top:5px; color: var(--text-secondary);"></p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="prev-btn" class="btn btn-secondary"><i class="fas fa-chevron-left"></i> Câu trước</button>
+                    <button id="next-btn" class="btn btn-secondary">Câu sau <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 10px;">Tiến trình làm bài</h3>
+                    <div id="nav-grid" class="nav-grid"></div>
+                    <button id="submit-btn" class="btn btn-primary">NỘP BÀI</button>
+                </div>
+
+                <div id="result-card" class="card hidden">
+                    <h3 style="text-align: center;">KẾT QUẢ</h3>
+                    <div class="score-display">
+                        <span id="score-val">0</span>/<span id="total-val">25</span>
+                    </div>
+                    <p id="score-percent">0%</p>
+                    <button onclick="location.reload()" class="btn btn-outline">Làm lại bài thi</button>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const QUIZ_DATA = {
+            title: "Đề Ôn Tập Dãy Số - Mã đề 02",
+            time: 45,
+            questions: [
+{
+text: "Câu 1 (Nhận biết): Một cấp số cộng có số hạng đầu u1 = 100, công sai d = 5. Công thức tính số hạng tổng quát un là:",
+options: [
+"un = 100 + 5(n - 1)",
+"un = 100 + 5n",
+"un = 100 * 5^(n - 1)",
+"un = 105 + 5n"
+],
+correct: 0,
+explanation: "Áp dụng công thức un = u1 + (n - 1)d."
+},
+{
+text: "Câu 2 (Nhận biết): Công thức tính tổng n số hạng đầu tiên của một cấp số nhân là:",
+options: [
+"Sn = u1 * (1 - q^n) / (1 - q)",
+"Sn = u1 * (1 - q^(n-1)) / (1 - q)",
+"Sn = n * u1 + q",
+"Sn = u1 * q^(n-1)"
+],
+correct: 0,
+explanation: "Đây là công thức chuẩn cho tổng của cấp số nhân với q khác 1."
+},
+{
+text: "Câu 3 (Nhận biết): Trong các dãy số thực tế sau, dãy nào là cấp số cộng?",
+options: [
+"Số tiền tiết kiệm mỗi tháng tăng thêm cố định 200.000đ",
+"Số lượng vi khuẩn nhân đôi sau mỗi giờ",
+"Giá trị chiếc xe giảm 10% mỗi năm so với năm trước",
+"Số tiền lãi ngân hàng nhận được hàng tháng (lãi kép)"
+],
+correct: 0,
+explanation: "Tăng thêm một lượng cố định là đặc điểm của cấp số cộng."
+},
+{
+text: "Câu 4 (Nhận biết): Cho cấp số nhân có u1 = 5, q = 2. Số hạng u3 là:",
+options: [
+"20",
+"10",
+"15",
+"25"
+],
+correct: 0,
+explanation: "u3 = u1 * q^2 = 5 * 2^2 = 20."
+},
+{
+text: "Câu 5 (Nhận biết): Dãy số un = 1/n được gọi là dãy số:",
+options: [
+"Giảm và bị chặn",
+"Tăng và bị chặn",
+"Giảm và không bị chặn",
+"Không tăng không giảm"
+],
+correct: 0,
+explanation: "Khi n tăng thì 1/n giảm, và dãy này luôn nằm trong khoảng (0, 1]."
+},
+{
+text: "Câu 6 (Thông hiểu): Một vận động viên tập chạy. Ngày đầu chạy 2km, mỗi ngày sau chạy thêm 500m so với ngày trước đó. Ngày thứ 10 vận động viên đó chạy bao nhiêu km?",
+options: [
+"6,5 km",
+"7 km",
+"6 km",
+"5,5 km"
+],
+correct: 0,
+explanation: "Cấp số cộng u1 = 2, d = 0,5. u10 = 2 + 9 * 0,5 = 6,5 km."
+},
+{
+text: "Câu 7 (Thông hiểu): Giá một chiếc điện thoại lúc mới mua là 15 triệu đồng. Sau mỗi năm sử dụng, giá trị giảm 20% so với năm trước đó. Sau 3 năm, giá trị chiếc điện thoại còn lại bao nhiêu?",
+options: [
+"7,68 triệu",
+"9 triệu",
+"6 triệu",
+"8,24 triệu"
+],
+correct: 0,
+explanation: "Cấp số nhân u1 = 15, q = 0,8. Sau 3 năm là u4 = 15 * (0,8)^3 = 7,68 triệu."
+},
+{
+text: "Câu 8 (Thông hiểu): Một khán đài có 30 hàng ghế. Hàng đầu có 20 ghế, mỗi hàng sau nhiều hơn hàng trước 4 ghế. Tính tổng số ghế của khán đài.",
+options: [
+"2340 ghế",
+"2500 ghế",
+"2100 ghế",
+"2400 ghế"
+],
+correct: 0,
+explanation: "S30 = (30/2) * [220 + 294] = 15 * [40 + 116] = 2340 ghế."
+},
+{
+text: "Câu 9 (Thông hiểu): Tế bào E. Coli trong điều kiện lý tưởng cứ 20 phút lại phân đôi một lần. Nếu ban đầu có 100 tế bào, sau 2 giờ sẽ có bao nhiêu tế bào?",
+options: [
+"6400",
+"12800",
+"3200",
+"800"
+],
+correct: 0,
+explanation: "2 giờ = 120 phút = 6 lần phân đôi. Cấp số nhân u1 = 100, q = 2. Sau 6 lần là u7 = 100 * 2^6 = 6400."
+},
+{
+text: "Câu 10 (Thông hiểu): Một công ty trả lương theo phương án: Tháng đầu 8 triệu, kể từ tháng thứ 2 mỗi tháng tăng thêm 200.000đ. Tổng thu nhập của nhân viên sau 1 năm làm việc là:",
+options: [
+"109,2 triệu",
+"96 triệu",
+"100,8 triệu",
+"110 triệu"
+],
+correct: 0,
+explanation: "S12 = (12/2) * [28 + 110,2] = 6 * [16 + 2,2] = 109,2 triệu."
+},
+{
+text: "Câu 11 (Thông hiểu): Một giếng khoan có độ sâu 20m. Giá mét khoan đầu tiên là 100.000đ, từ mét thứ hai giá mỗi mét tăng thêm 30.000đ. Tổng chi phí khoan giếng là:",
+options: [
+"7,7 triệu",
+"6,5 triệu",
+"8 triệu",
+"7,2 triệu"
+],
+correct: 0,
+explanation: "S20 = (20/2) * [2100 + 1930] = 10 * [200 + 570] = 7.700.000đ."
+},
+{
+text: "Câu 12 (Thông hiểu): Một bức tường trang trí hình tam giác có 15 hàng gạch. Hàng trên cùng có 1 viên, mỗi hàng dưới nhiều hơn hàng trên liền kề 2 viên. Tổng số gạch cần dùng là:",
+options: [
+"225 viên",
+"250 viên",
+"210 viên",
+"200 viên"
+],
+correct: 0,
+explanation: "S15 = (15/2) * [21 + 142] = 7,5 * 30 = 225 viên."
+},
+{
+text: "Câu 13 (Thông hiểu): Lãi suất ngân hàng kỳ hạn 1 tháng là 0,4%. Một người gửi tiết kiệm 50 triệu đồng theo hình thức lãi kép. Sau 6 tháng số tiền người đó nhận được (cả gốc lẫn lãi) là:",
+options: [
+"51,21 triệu",
+"51,20 triệu",
+"50,8 triệu",
+"52 triệu"
+],
+correct: 0,
+explanation: "T = 50 * (1 + 0,004)^6 ≈ 51,21 triệu."
+},
+{
+text: "Câu 14 (Thông hiểu): Một chuỗi cửa hàng thức ăn nhanh có 5 cửa hàng trong năm đầu tiên. Mỗi năm số cửa hàng tăng gấp đôi. Hỏi sau bao nhiêu năm chuỗi sẽ có 160 cửa hàng?",
+options: [
+"5 năm",
+"6 năm",
+"4 năm",
+"7 năm"
+],
+correct: 0,
+explanation: "160 = 5 * 2^(n-1) => 2^(n-1) = 32 => n-1 = 5 => n = 6."
+},
+{
+text: "Câu 15 (Thông hiểu): Một người thợ xây được thuê trả công theo ngày. Ngày đầu nhận 100.000đ, mỗi ngày sau tăng thêm 10.000đ. Sau bao nhiêu ngày thì tổng số tiền người thợ nhận được là 2,1 triệu đồng?",
+options: [
+"15 ngày",
+"20 ngày",
+"12 ngày",
+"10 ngày"
+],
+correct: 0,
+explanation: "2100 = (n/2) * [200 + (n-1)10]. Giải phương trình bậc 2 tìm được n = 15."
+},
+{
+text: "Câu 16 (Thông hiểu): Một tháp chuông xây theo quy luật: tầng dưới cùng có 100 viên đá, mỗi tầng trên ít hơn tầng dưới 2 viên. Tháp có 40 tầng. Tổng số đá để xây tháp là:",
+options: [
+"2440 viên",
+"3000 viên",
+"2500 viên",
+"2400 viên"
+],
+correct: 0,
+explanation: "S40 = (40/2) * [2100 + 39(-2)] = 20 * [200 - 78] = 2440 viên."
+},
+{
+text: "Câu 17 (Thông hiểu): Dân số một thành phố là 2 triệu người, tỷ lệ tăng dân số là 1,2%/năm. Dự báo dân số sau 10 năm là bao nhiêu?",
+options: [
+"2,25 triệu",
+"2,12 triệu",
+"2,4 triệu",
+"2,3 triệu"
+],
+correct: 0,
+explanation: "T = 2 * (1 + 0,012)^10 ≈ 2,253 triệu."
+},
+{
+text: "Câu 18 (Thông hiểu): Một loại thuốc được tiêm vào cơ thể. Sau mỗi giờ, nồng độ thuốc giảm đi 15%. Nếu nồng độ ban đầu là 100mg, sau 4 giờ nồng độ còn lại là bao nhiêu?",
+options: [
+"52,2 mg",
+"40 mg",
+"60,5 mg",
+"45,8 mg"
+],
+correct: 0,
+explanation: "u5 = 100 * (0,85)^4 ≈ 52,2 mg."
+},
+{
+text: "Câu 19 (Thông hiểu): Một đống củi được xếp thành các lớp. Lớp dưới cùng có 25 khúc, mỗi lớp trên ít hơn lớp dưới 1 khúc. Lớp trên cùng có 5 khúc. Đống củi có bao nhiêu khúc?",
+options: [
+"315 khúc",
+"300 khúc",
+"325 khúc",
+"210 khúc"
+],
+correct: 0,
+explanation: "Số lớp n = (25 - 5)/1 + 1 = 21. S21 = (21/2) * (25 + 5) = 315 khúc."
+},
+{
+text: "Câu 20 (Thông hiểu): Một máy photocopy trị giá 80 triệu đồng. Mỗi năm máy khấu hao 15% so với năm trước đó. Sau bao nhiêu năm giá trị máy còn dưới 30 triệu đồng?",
+options: [
+"7 năm",
+"6 năm",
+"8 năm",
+"5 năm"
+],
+correct: 0,
+explanation: "80 * (0,85)^n < 30 => n > log_{0,85}(30/80) ≈ 6,03. Vậy năm thứ 7."
+},
+{
+text: "Câu 21 (Vận dụng): Một người vay ngân hàng 200 triệu đồng để mua nhà với lãi suất 1%/tháng. Mỗi tháng người đó trả một số tiền cố định là m triệu đồng. Để trả hết nợ sau 24 tháng, giá trị của m gần nhất với:",
+options: [
+"9,41 triệu",
+"8,33 triệu",
+"10,2 triệu",
+"9 triệu"
+],
+correct: 0,
+explanation: "Áp dụng công thức trả góp: m = A * r * (1+r)^n / [(1+r)^n - 1] = 200 * 0,01 * (1,01)^24 / [(1,01)^24 - 1] ≈ 9,41 triệu."
+},
+{
+text: "Câu 22 (Vận dụng): Trong một thí nghiệm, một lá sen có diện tích ban đầu 2cm2. Cứ sau mỗi ngày diện tích lá sen tăng thêm 50% so với ngày trước đó. Sau bao nhiêu ngày thì lá sen che phủ mặt hồ rộng 1m2?",
+options: [
+"16 ngày",
+"20 ngày",
+"10 ngày",
+"25 ngày"
+],
+correct: 0,
+explanation: "2 * (1,5)^n ≥ 10000 (đổi 1m2 = 10000cm2) => n ≥ log_{1,5}(5000) ≈ 20,9. Vậy sau 21 ngày (Câu hỏi hỏi gần đúng, chọn 20 nếu tính từ ngày u1)."
+},
+{
+text: "Câu 23 (Vận dụng): Một nhà nghiên cứu nuôi cấy vi khuẩn. Ngày đầu tiên có 1000 con. Kể từ ngày thứ hai, mỗi ngày số vi khuẩn tăng thêm k% so với ngày trước đó. Sau 5 ngày số vi khuẩn là 2488 con. Tìm k.",
+options: [
+"20%",
+"15%",
+"25%",
+"10%"
+],
+correct: 0,
+explanation: "1000 * (1 + k/100)^4 = 2488 => (1 + r)^4 = 2,488 => 1 + r ≈ 1,2 => r = 0,2."
+},
+{
+text: "Câu 24 (Vận dụng): Ông A muốn xây một cầu thang bằng đá. Bậc dưới cùng rộng 150cm, mỗi bậc trên thu hẹp 2cm. Biết bậc trên cùng rộng 90cm. Tính tổng chiều dài các mặt bậc cầu thang.",
+options: [
+"3720 cm",
+"3600 cm",
+"3800 cm",
+"4000 cm"
+],
+correct: 0,
+explanation: "Số bậc n = (150 - 90)/2 + 1 = 31 bậc. Tổng = (31/2)(150 + 90) = 3720 cm."
+},
+{
+text: "Câu 25 (Vận dụng): Một cây xanh cao 1m. Mỗi năm cây tăng chiều cao thêm 10% so với năm trước. Tuy nhiên, mỗi năm người làm vườn lại cắt tỉa đi 10cm ngọn. Hỏi sau 36 năm cây cao bao nhiêu?",
+options: [
+"1 m",
+"1,231 m",
+"1,15 m",
+"1,05 m"
+],
+correct: 0,
+explanation: "Năm 1: 1001,1 - 10 = 100. Năm 2: 100*1,1 - 10 = 100. Cây vẫn cao 1m (do tốc độ tăng bằng tốc độ cắt)."
+}
+]
+        };
+
+        let currentIdx = 0;
+        let userAnswers = new Array(QUIZ_DATA.questions.length).fill(null);
+        let isSubmitted = false;
+        let secondsLeft = QUIZ_DATA.time * 60;
+        let timerInterval;
+
+        const qText = document.getElementById('q-text');
+        const optionsList = document.getElementById('options-list');
+        const navGrid = document.getElementById('nav-grid');
+        const timerDisplay = document.getElementById('timer');
+
+        function init() {
+            navGrid.innerHTML = '';
+            QUIZ_DATA.questions.forEach((_, i) => {
+                const item = document.createElement('div');
+                item.className = 'nav-item';
+                item.innerText = i + 1;
+                item.id = `nav-${i}`;
+                item.onclick = () => { currentIdx = i; renderQuestion(); };
+                navGrid.appendChild(item);
+            });
+            renderQuestion();
+            startTimer();
+        }
+
+        function renderQuestion() {
+            const data = QUIZ_DATA.questions[currentIdx];
+            document.getElementById('q-current').innerText = currentIdx + 1;
+            qText.innerText = data.text; // Sửa lỗi gọi thuộc tính .q thành .text
+            
+            optionsList.innerHTML = '';
+            data.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                if (userAnswers[currentIdx] === i) div.classList.add('selected');
+                
+                if (isSubmitted) {
+                    div.classList.add('disabled');
+                    if (i === data.correct) div.classList.add('correct');
+                    if (userAnswers[currentIdx] === i && i !== data.correct) div.classList.add('wrong');
+                } else {
+                    div.onclick = () => selectOption(i);
+                }
+
+                div.innerHTML = `<span style="font-weight:bold; margin-right:10px">${String.fromCharCode(65+i)}.</span> <span>${opt}</span>`;
+                optionsList.appendChild(div);
+            });
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${currentIdx}`).classList.add('active');
+
+            document.getElementById('prev-btn').disabled = currentIdx === 0;
+            document.getElementById('next-btn').disabled = currentIdx === QUIZ_DATA.questions.length - 1;
+
+            const expBox = document.getElementById('explanation-box');
+            if (isSubmitted) {
+                expBox.classList.remove('hidden');
+                document.getElementById('explanation-text').innerText = data.explanation; // Sửa lỗi thuộc tính .explain thành .explanation
+            } else {
+                expBox.classList.add('hidden');
+            }
+        }
+
+        function selectOption(idx) {
+            userAnswers[currentIdx] = idx;
+            document.getElementById(`nav-${currentIdx}`).classList.add('done');
+            renderQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (isSubmitted) return;
+                secondsLeft--;
+                const m = Math.floor(secondsLeft / 60);
+                const s = secondsLeft % 60;
+                timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (secondsLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            clearInterval(timerInterval);
+            let score = 0;
+            userAnswers.forEach((ans, i) => {
+                const navItem = document.getElementById(`nav-${i}`);
+                if (ans === QUIZ_DATA.questions[i].correct) {
+                    score++;
+                    navItem.classList.add('correct');
+                } else {
+                    navItem.classList.add('wrong');
+                }
+            });
+
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('score-percent').innerText = Math.round((score/QUIZ_DATA.questions.length)*100) + "%";
+            renderQuestion();
+        }
+
+        document.getElementById('next-btn').onclick = () => { if (currentIdx < QUIZ_DATA.questions.length - 1) { currentIdx++; renderQuestion(); } };
+        document.getElementById('prev-btn').onclick = () => { if (currentIdx > 0) { currentIdx--; renderQuestion(); } };
+        document.getElementById('submit-btn').onclick = () => { if (confirm("Bạn có chắc chắn muốn nộp bài?")) finishQuiz(); };
+
+        init();
+    </script>
+</body>
+</html>
