@@ -62,6 +62,20 @@ const deThiList = [
     soCau: 25,
     thoiGian: 45
   },
+  {
+    chuyenDe: "Đạo Hàm",
+    tenDe: "Đề số 06 - Đạo hàm",
+    linkDe: "ChuyenDe/Dao-ham/dh-06.html",
+    soCau: 25,
+    thoiGian: 45
+  },
+  {
+    chuyenDe: "Đạo Hàm",
+    tenDe: "Đề số 07 - Đạo hàm",
+    linkDe: "ChuyenDe/Dao-ham/dh-07.html",
+    soCau: 25,
+    thoiGian: 45
+  },
   // ------------------Chuyên đề hàm số Lượng Giác-------------------------
   {
     chuyenDe: "Lượng Giác",
